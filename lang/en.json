@@ -1,0 +1,18 @@
+{
+	"MOTIONTRACKER.WelcomeMessage": "Welcome to the Motion Tracker module, this module was developped in order to bring some depth for the Alien RPG motion tracker tool we all love. Have fun!",
+	"MOTIONTRACKER.config": "Motion Tracker configuration",
+	"MOTIONTRACKER.configTitle": "Motion Tracker configuration",
+	"MOTIONTRACKER.configHint": "The motion trackers tracks the relative visible tokens from the selected token.",
+	"MOTIONTRACKER.gmOnlyTitle": "GM Only?",
+	"MOTIONTRACKER.gmOnlyHint": "Only the GM may activate the motion tracker",
+	"MOTIONTRACKER.seePlayersTitle": "Scan other players?",
+	"MOTIONTRACKER.seePlayersHint": "The motion tracker will also show other player tokens dispositions",
+	"MOTIONTRACKER.maxDistanceTitle": "Max distance for scanning",
+	"MOTIONTRACKER.maxDistanceHint": "The maximum tracked distance, if the tokens are outside of the limit they won't be shown",
+	"MOTIONTRACKER.centerTrackerTitle": "Center Motion Tracker?",
+	"MOTIONTRACKER.centerTrackerHint": "The motion tracker will be drawn in the middle of the screen over anything else",
+	"MOTIONTRACKER.xOffsetTitle": "Motion Tracker offset in horizontal Axis",
+	"MOTIONTRACKER.xOffsetHint": "The motion tracker will be drawn translated with that value in horizontal plane (pixels)",
+	"MOTIONTRACKER.yOffsetTitle": "Motion Tracker offset in vertical Axis",
+	"MOTIONTRACKER.yOffsetHint": "The motion tracker will be drawn translated with that value in vertical plane (pixels)"
+}

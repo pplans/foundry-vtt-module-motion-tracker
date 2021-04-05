@@ -1,0 +1,7 @@
+.motion-tracker-ico
+{
+	width: 28px;
+	height: 28px;
+	background: no-repeat url("./textures/motion_tracker_ico.webp");
+	background-size: 28px;
+}

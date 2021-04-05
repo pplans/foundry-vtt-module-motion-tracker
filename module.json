@@ -1,0 +1,35 @@
+{
+  "name": "motion_tracker",
+  "title": "Motion Tracker - A Module for Alien RPG",
+  "description": "Allowing players to actually have a motion tracker visually in the game. The motion tracker is a tool that tracks moving objects. Here, we will show position of closest active tokens.",
+  "author": "Draedrus",
+  "version": "0.0.0",
+  "minimumCoreVersion": "0.7.9",
+  "esmodules": ["scripts/motion_tracker.js"],
+  "socket": true,
+	"styles": [
+		"style.css"
+	],
+	"languages": [{
+		"lang": "en",
+		"name": "English",
+		"path": "lang/en.json"
+	}],
+  "dependencies":
+  [
+    {
+      "name": "alienrpg",
+      "type": "system"
+    }
+  ],
+  "authors": [
+    {
+      "name": "Draedrus",
+      "email": "pierre.plans@gmail.com",
+      "url": ""
+    }
+  ],
+  "manifest": "urlmanifest",
+  "download": "urldownload",
+  "license": "readme.md"
+}
