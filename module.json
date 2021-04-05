@@ -29,7 +29,7 @@
       "url": "https://github.com/pplans/"
     }
   ],
-  "manifest": "https://github.com/pplans/foundry-vtt-module-motion-tracker/blob/main/module.json",
+  "manifest": "https://raw.githubusercontent.com/pplans/foundry-vtt-module-motion-tracker/main/module.json",
   "download": "https://github.com/pplans/foundry-vtt-module-motion-tracker/archive/refs/heads/main.zip",
   "license": "readme.md"
 }
