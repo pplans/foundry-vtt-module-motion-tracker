@@ -49,7 +49,7 @@ class MotionTrackerConfig extends FormApplication
 function gmOnly_Settings()
 {
 
-	game.settings.registerMenu(REGISTER_CODE, REGISTER_CODE,
+	/*game.settings.registerMenu(REGISTER_CODE, REGISTER_CODE,
 	{
 		name: 'MOTIONTRACKER.config',
 		label: 'MOTIONTRACKER.configTitle',
@@ -57,9 +57,9 @@ function gmOnly_Settings()
 		icon: 'fas motion-tracker-ico',
 		type: MotionTrackerConfig,
 		restricted: false
-	});
+	});*/
     
-	game.settings.register(REGISTER_CODE, 'settings',
+	/*game.settings.register(REGISTER_CODE, 'settings',
 	{
 		name: 'Motion Tracker Settings',
 		scope: 'client',
@@ -73,7 +73,7 @@ function gmOnly_Settings()
 				// TODO
 			}
 		}
-	});
+	});*/
 
 	game.settings.register(REGISTER_CODE, 'enabled',
 	{
