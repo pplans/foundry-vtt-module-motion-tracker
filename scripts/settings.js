@@ -6,6 +6,7 @@ export function registerSettings()
 }
 
 export const REGISTER_CODE = 'motion_tracker';
+export const MAX_SIZE = 200;
 
     
 /**
@@ -131,6 +132,21 @@ function gmOnly_Settings()
 		config : true,
 		type: Number,
 		default: 0
+	});
+
+	game.settings.register(REGISTER_CODE,'size',
+	{
+		name : 'MOTIONTRACKER.sizeTitle',
+		hint : 'MOTIONTRACKER.sizeHint',
+		scope :'world',
+		config : true,
+		type: Number,
+		default: 200,
+		range: {
+		    min: 50,
+		    max: MAX_SIZE,
+		    step: 10
+		}
 	});
 
 	game.settings.register(REGISTER_CODE,'maxDistance',

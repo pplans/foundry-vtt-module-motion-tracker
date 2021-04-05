@@ -61,7 +61,7 @@ Hooks.on('ready', ()=>
     
 	static DEFAULT_APPEARANCE(user = game.user)
 	{
-		return { dimensions: { w: 400, h: 400 } };
+		return { dimensions: { w: game.settings.get(settings.REGISTER_CODE, 'size'), h: game.settings.get(settings.REGISTER_CODE, 'size') } };
 	}
     
 	static ALL_DEFAULT_OPTIONS(user = game.user)
@@ -71,7 +71,7 @@ Hooks.on('ready', ()=>
     
 	static get CONFIG()
 	{
-		return mergeObject(MotionTracker.DEFAULT_OPTIONS, game.settings.get(settings.REGISTER_CODE, 'settings'));
+		return MotionTracker.DEFAULT_OPTIONS;
 	}
     
 	static APPEARANCE(user = game.user)

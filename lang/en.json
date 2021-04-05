@@ -11,6 +11,8 @@
 	"MOTIONTRACKER.maxDistanceHint": "The maximum tracked distance, if the tokens are outside of the limit they won't be shown",
 	"MOTIONTRACKER.centerTrackerTitle": "Center Motion Tracker?",
 	"MOTIONTRACKER.centerTrackerHint": "The motion tracker will be drawn in the middle of the screen over anything else",
+	"MOTIONTRACKER.sizeTitle": "Size",
+	"MOTIONTRACKER.sizeHint": "The motion tracker size (pixels)",
 	"MOTIONTRACKER.xOffsetTitle": "Motion Tracker offset in horizontal Axis",
 	"MOTIONTRACKER.xOffsetHint": "The motion tracker will be drawn translated with that value in horizontal plane (pixels)",
 	"MOTIONTRACKER.yOffsetTitle": "Motion Tracker offset in vertical Axis",

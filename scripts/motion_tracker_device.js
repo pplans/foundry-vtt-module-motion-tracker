@@ -19,6 +19,7 @@ export class MotionTrackerDevice
 		this.allowInteractivity = false;
 		this.raycaster = new THREE.Raycaster();
 		this.scene_translation2D = {x:0, y: 0};
+		this.globalScale = 1;
 
 		this.user = null;
 
@@ -126,7 +127,7 @@ export class MotionTrackerDevice
 				for(let i = 0;i<this.signalsMax;++i)
 				{
 					this.signalsObj[i] = {
-						geom: new THREE.PlaneGeometry(32, 32, 1, 1),
+						geom: new THREE.PlaneGeometry(16, 16, 1, 1),
 						material: new THREE.MeshBasicMaterial( { transparent: true, alphaMap: this.renderer.scopedTextureCache.ping_alpha, map: this.renderer.scopedTextureCache.ping_color, color: 0xffffff } )
 					}
 					this.signalsObj[i].material.opacity = 0.;
@@ -159,10 +160,8 @@ export class MotionTrackerDevice
 		});
 	}
 
-	setDimensions(dimensions)
+	computeDisplayParameters(dimensions)
 	{
-		this.scene_translation2D.x = -this.container.clientWidth / 2;
-		this.scene_translation2D.y = -this.container.clientHeight / 2;
 		this.display.currentWidth = this.container.clientWidth / 2;
 		this.display.currentHeight = this.container.clientHeight / 2;
 		if (dimensions)
@@ -173,8 +172,12 @@ export class MotionTrackerDevice
 			this.display.containerWidth = this.display.currentWidth;
 			this.display.containerHeight = this.display.currentHeight;
 		}
-		this.scene_translation2D.x += this.display.containerWidth / 2;
-		this.scene_translation2D.y += this.display.containerHeight / 2;
+
+		this.display.aspect = Math.min(this.display.currentWidth / this.display.containerWidth, this.display.currentHeight / this.display.containerHeight);
+
+		this.globalScale = Math.min(1., Math.max(0.15, dimensions.w/settings.MAX_SIZE));
+		this.scene_translation2D.x = (-0.5*this.display.currentWidth + 0.5*this.display.containerWidth);
+		this.scene_translation2D.y = (-0.5*this.display.currentHeight + 0.5*this.display.containerHeight);
 		if(game.settings.get(settings.REGISTER_CODE,'centerTracker'))
 		{
 			this.scene_translation2D.x = 0;
@@ -183,12 +186,15 @@ export class MotionTrackerDevice
 		this.scene_translation2D.x += game.settings.get(settings.REGISTER_CODE,'xOffset');
 		this.scene_translation2D.y += game.settings.get(settings.REGISTER_CODE,'yOffset');
 
-		this.display.aspect = Math.min(this.display.currentWidth / this.display.containerWidth, this.display.currentHeight / this.display.containerHeight);
-
 		if (this.config.autoscale)
-			this.display.scale = Math.sqrt(this.display.containerWidth * this.display.containerWidth + this.display.containerHeight * this.display.containerHeight) / 13;
+			this.display.scale = Math.sqrt(settings.MAX_SIZE * settings.MAX_SIZE + settings.MAX_SIZE * settings.MAX_SIZE) / 13;
 		else
 			this.display.scale = this.config.scale;
+	}
+
+	setDimensions(dimensions)
+	{
+		this.computeDisplayParameters(dimensions);
 
 		this.renderer.setSize(this.display.currentWidth * 2, this.display.currentHeight * 2);
 
@@ -200,30 +206,18 @@ export class MotionTrackerDevice
 
 		if (this.camera)
 			this.scene.remove(this.camera);
-		this.camera = new THREE.PerspectiveCamera(20, this.display.currentWidth / this.display.currentHeight, 1, this.cameraHeight.max * 1.3);
-
-		switch (this.animstate) {
-			case 'selector':
-				this.camera.position.z = this.selector.dice.length > 9 ? this.cameraHeight.far : (this.selector.dice.length < 6 ? this.cameraHeight.close : this.cameraHeight.medium);
-				break;
-			case 'throw': case 'afterthrow': default: this.camera.position.z = this.cameraHeight.far;
-
-		}
+		this.camera = new THREE.OrthographicCamera(
+			this.display.currentWidth / - 2, this.display.currentWidth / 2,
+			this.display.currentHeight / 2, this.display.currentHeight / - 2,
+			 1, this.cameraHeight.max * 1.3);
+		//this.camera = new THREE.PerspectiveCamera(20, this.display.currentWidth / this.display.currentHeight, 1, this.cameraHeight.max * 1.3);
+		this.camera.position.z = this.cameraHeight.far;
 		this.camera.near = 10;
 		this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
-		const maxwidth = Math.max(this.display.containerWidth, this.display.containerHeight);
-
-		const intensity = 1.;
-		this.light = new THREE.DirectionalLight(this.colors.spotlight, intensity);
-		this.light.position.set(-this.display.containerWidth / 2, this.display.containerHeight / 2, maxwidth / 2);
-		this.light.target.position.set(0, 0, 0);
-		this.light.distance = 0;
-		this.light.castShadow = false;
-		this.scene.add(this.light);
-
 		const material = new THREE.MeshBasicMaterial( { map: this.renderer.scopedTextureCache.background, color: 0xffffff } );
-		this.motion_tracker_surface = new THREE.Mesh(new THREE.PlaneGeometry(this.display.containerWidth, this.display.containerHeight, 1, 1), material);
+		this.motion_tracker_surface = new THREE.Mesh(new THREE.PlaneGeometry(settings.MAX_SIZE, settings.MAX_SIZE, 1, 1), material);
+		this.motion_tracker_surface.scale.set(this.globalScale, this.globalScale, 1);
 		this.motion_tracker_surface.receiveShadow = false;
 		this.motion_tracker_surface.position.set(this.scene_translation2D.x, this.scene_translation2D.y, -1);
 		this.scene.add(this.motion_tracker_surface);
@@ -233,15 +227,6 @@ export class MotionTrackerDevice
 
 	update(config)
 	{
-		if (config.autoscale)
-		{
-			this.display.scale = Math.sqrt(this.display.containerWidth * this.display.containerWidth + this.display.containerHeight * this.display.containerHeight) / 13;
-		} else {
-			this.display.scale = config.scale
-		}
-		this.dicefactory.setScale(this.display.scale);
-
-		this.speed = parseInt(config.speed, 10);
 		this.sounds = config.sounds;
 		this.volume = config.soundsVolume;
 		this.scene.traverse(object => {
@@ -270,7 +255,7 @@ export class MotionTrackerDevice
 		const tokensSelected = canvas.tokens.controlled;
 		const seePlayers = game.settings.get(settings.REGISTER_CODE,'seePlayers');
 		const distanceMax = game.settings.get(settings.REGISTER_CODE,'maxDistance');
-		const distPerPx = 400.*.5/distanceMax;
+		const distPerPx = this.globalScale*settings.MAX_SIZE*.5/distanceMax;
 		if(tokensSelected.length>0)
 		{
 			const selectedTok = canvas.tokens.controlled[0];
@@ -292,15 +277,21 @@ export class MotionTrackerDevice
 					}
 				});
 		}
-		for(let i = 0;i<Math.min(this.signals.length, this.signalsObj.length);++i)
+		for(let i = 0;i<this.signalsObj.length;++i)
 		{
-			this.signalsObj[i].material.opacity = 1.;
-			this.signalsObj[i].material.needUpdate = true;
-			this.signalsObj[i].mesh.position.set(
-				distPerPx*this.signals[i].dir.x*this.signals[i].distance + this.scene_translation2D.x
-				, distPerPx*this.signals[i].dir.y*this.signals[i].distance + this.scene_translation2D.y
-				, 0);
-			this.signalsObj[i].mesh.visible = true;
+			if(i<this.signals.length)
+			{
+				this.signalsObj[i].material.opacity = 1.;
+				this.signalsObj[i].material.needUpdate = true;
+				this.signalsObj[i].mesh.scale.set(this.globalScale, this.globalScale, 1);
+				this.signalsObj[i].mesh.position.set(
+					distPerPx*this.signals[i].dir.x*this.signals[i].distance + this.scene_translation2D.x
+					, distPerPx*this.signals[i].dir.y*this.signals[i].distance + this.scene_translation2D.y
+					, 0);
+				this.signalsObj[i].mesh.visible = true;
+			}
+			else
+				this.signalsObj[i].mesh.visible = false;
 		}
 	}
 
@@ -308,6 +299,13 @@ export class MotionTrackerDevice
 	{
 		if(this.running)
 		{
+			const size = game.settings.get(settings.REGISTER_CODE, 'size');
+			this.computeDisplayParameters({w:size,h:size});
+			if(this.motion_tracker_surface)
+			{
+				this.motion_tracker_surface.position.set(this.scene_translation2D.x, this.scene_translation2D.y, -1);
+				this.motion_tracker_surface.scale.set(this.globalScale, this.globalScale, 1);
+			}
 			requestAnimationFrame( this.render.bind(this) );
 			this.takeSnapshot();
 			this.renderer.render(this.scene, this.camera);
