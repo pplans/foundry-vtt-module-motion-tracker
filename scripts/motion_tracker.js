@@ -174,7 +174,7 @@ Hooks.on('ready', ()=>
 			switch(request.type)
 			{
 				case 'show':
-					this.show(game.user, false);
+					this.show(game.user, false, null, false, request.tokenReferenceId);
 				break;
 				case 'hide':
 					this.hide(game.user, false);
@@ -274,16 +274,19 @@ Hooks.on('ready', ()=>
 	 * @param blind if the call is blind for the current user
 	 * @returns {Promise<boolean>} when resolved true if the animation was displayed, false if not.
 	 */
-	show(user = game.user, synchronize = true, users = null, blind = false)
+	show(user = game.user, synchronize = true, users = null, blind = false, tokenId = null)
 	{
+		if(tokenId === null && canvas.tokens.controlled.length>0)
+			tokenId = canvas.tokens.controlled[0].data._id;
+		
 		return new Promise((resolve, reject) =>
 		{
 			if (synchronize)
 			{
 				users = users && users.length > 0 ? (users[0].id ? users.map(user => user.id) : users) : users;
-				game.socket.emit('module.motion_tracker', { type:'show', user: user.id, users: users });
+				game.socket.emit('module.motion_tracker', { type:'show', user: user.id, users: users, tokenReferenceId: tokenId });
 			}
-			this.device.setUser(user);
+			this.device.setUserAndToken(tokenId, user);
 			this.device.show();
 			resolve();
 			/*if(game.settings.get(settings.REGISTER_CODE,'immediatelyDisplayChatMessages'))

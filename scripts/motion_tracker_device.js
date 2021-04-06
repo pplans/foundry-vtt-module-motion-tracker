@@ -20,6 +20,7 @@ export class MotionTrackerDevice
 		this.raycaster = new THREE.Raycaster();
 		this.scene_translation2D = {x:0, y: 0};
 		this.globalScale = 1;
+		this.tokenReference = null;
 
 		this.user = null;
 
@@ -245,7 +246,7 @@ export class MotionTrackerDevice
 
 	takeSnapshot()
 	{
-		if(this.user===null)
+		if(this.user===null || this.tokenReference===null)
 			return;
 		// wipe precedent signals
 		this.signals.length = 0;
@@ -258,14 +259,19 @@ export class MotionTrackerDevice
 		const distPerPx = 0.8*this.globalScale*settings.MAX_SIZE*.5/distanceMax;
 		if(tokensSelected.length>0)
 		{
-			const selectedTok = canvas.tokens.controlled[0];
-			const selectedTokenTransform = selectedTok.transform;
-			const pos = canvas.tokens.controlled[0].getCenter(selectedTokenTransform.position.x, selectedTokenTransform.position.y);
+			const pos =
+			{
+				x:0.5*this.tokenReference.scale*this.tokenReference.width+this.tokenReference.x,
+				y:0.5*this.tokenReference.scale*this.tokenReference.height+this.tokenReference.y
+			};
 			tokens.forEach(token => 
 				{
-					if(token.actorId!==selectedTok.data.actorId && !token.hidden)
+					if(token._id!==this.tokenReference._id && !token.hidden)
 					{
-						const oPos = {x:token.x, y:token.y};
+						const oPos = {
+							x:0.5*token.scale*token.width+token.x,
+							y:0.5*token.scale*token.height+token.y
+						};
 						oPos.x = (oPos.x-pos.x)/scene.data.grid;
 						oPos.y = (pos.y-oPos.y)/scene.data.grid;
 						const normDir = Math.sqrt(oPos.x*oPos.x+oPos.y*oPos.y);
@@ -333,9 +339,17 @@ export class MotionTrackerDevice
 		this.motion_tracker_surface.geometry.dispose();
 	}
 
-	setUser(user = game.user)
+	setUserAndToken(tokenId, user = game.user)
 	{
 		this.user = user;
+		this.tokenReference = null;
+		const scene = game.scenes.get(this.user.viewedScene);
+		const tokens = scene.data.tokens;
+		const tokensSelected = canvas.tokens.controlled;
+		if(tokensSelected.length>0)
+		{
+			this.tokenReference = tokens.find(tok => tok._id === tokenId);
+		}
 	}
 
 	show()
