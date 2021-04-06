@@ -255,7 +255,7 @@ export class MotionTrackerDevice
 		const tokensSelected = canvas.tokens.controlled;
 		const seePlayers = game.settings.get(settings.REGISTER_CODE,'seePlayers');
 		const distanceMax = game.settings.get(settings.REGISTER_CODE,'maxDistance');
-		const distPerPx = this.globalScale*settings.MAX_SIZE*.5/distanceMax;
+		const distPerPx = 0.8*this.globalScale*settings.MAX_SIZE*.5/distanceMax;
 		if(tokensSelected.length>0)
 		{
 			const selectedTok = canvas.tokens.controlled[0];
