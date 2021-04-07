@@ -16,5 +16,6 @@
 	"MOTIONTRACKER.xOffsetTitle": "Motion Tracker offset in horizontal Axis",
 	"MOTIONTRACKER.xOffsetHint": "The motion tracker will be drawn translated with that value in horizontal plane (pixels)",
 	"MOTIONTRACKER.yOffsetTitle": "Motion Tracker offset in vertical Axis",
-	"MOTIONTRACKER.yOffsetHint": "The motion tracker will be drawn translated with that value in vertical plane (pixels)"
+	"MOTIONTRACKER.yOffsetHint": "The motion tracker will be drawn translated with that value in vertical plane (pixels)",
+	"MOTIONTRACKER.MotionTrackerDialogTitle": "Motion Tracker screen"
 }

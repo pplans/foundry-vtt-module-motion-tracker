@@ -131,7 +131,7 @@ Hooks.on('ready', ()=>
 
 			},
 			close: () => { this.close(true, false); }
-		});
+		}, {jQuery: true, minimizable: false});
 		this.canvas = null;
 		this.currentCanvasPosition = MotionTracker.CONFIG.canvasZIndex;
 		this.currentUseHighDPI = MotionTracker.CONFIG.useHighDPI;
@@ -280,10 +280,15 @@ Hooks.on('ready', ()=>
 	{
 		if(this.windowElement && this.canvas)
 		{
-			this.canvas[0].style.width =size+'px';
-			this.canvas[0].style.height=size+'px';
-			this.windowElement[0].style.width=size+'px';
-			this.windowElement[0].style.height=size+'px';
+			this.canvas[0].style.width  = size+'px';
+			this.canvas[0].style.height = size+'px';
+			this.canvas[0].style.position = 'relative';
+			this.windowElement[0].style.width = size+'px';
+			this.windowElement[0].style.height = (size+30)+'px';
+			let title = $(this.windowElement[0]).find('.window-header');
+			title.css('background-color', '#194c99');
+			let content = $(this.windowElement[0]).find('.window-content');
+			content.css('width', size+'px').css('height', size+'px').css('padding', '0');
 			if(this.device!==null && this.device!==undefined)
 				this.device.resize(size);
 		}
