@@ -260,6 +260,7 @@ export class MotionTrackerDevice
 		const seePlayers = game.settings.get(settings.REGISTER_CODE,'seePlayers');
 		const distanceMax = game.settings.get(settings.REGISTER_CODE,'maxDistance');
 		const distPerPx = 0.8*this.globalScale*settings.MAX_SIZE*.5/distanceMax;
+		const immobileStatuses = [CONFIG.Combat.defeatedStatusId, 'unconscious', 'asleep', 'stunned', 'paralysis']
 		if(tokensSelected.length>0)
 		{
 			const pos =
@@ -269,7 +270,9 @@ export class MotionTrackerDevice
 			};
 			tokens.forEach(token => 
 				{
-					if(token._id!==this.tokenReference._id && !token.hidden)
+					let immobile = token.actorData?.effects?.find(e => immobileStatuses.some(s=>s===e.flags.core.statusId));
+					
+					if(!immobile && token._id!==this.tokenReference._id && !token.hidden)
 					{
 						const oPos = {
 							x:0.5*token.scale*token.width+token.x,
