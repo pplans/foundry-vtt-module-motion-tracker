@@ -5,3 +5,9 @@
 	background: no-repeat url("./textures/motion_tracker_ico.webp");
 	background-size: 28px;
 }
+
+#motion-tracker-canvas
+{
+	width: 100%;
+	height: 100%;
+}

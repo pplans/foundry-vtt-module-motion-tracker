@@ -17,7 +17,13 @@ export function renderMotionTrackerIcon()
 
 Hooks.on('init', ()=>
 {
-	settings.registerSettings();
+	settings.registerSettings((settings)=>
+	{
+		if(game.motion_tracker)
+		{
+			game.motion_tracker.resize(settings);
+		}
+	});
 });
 
 Hooks.on('setup', ()=>
@@ -34,6 +40,9 @@ Hooks.on('ready', ()=>
 		setTimeout(renderMotionTrackerIcon(), 1000);
 
 	game.motion_tracker = new MotionTracker();
+	Hooks.on('renderDialog', (dialog, html, data) => {
+		game.motion_tracker.setupDevice(dialog, html, data);
+	});
 });
 
 
@@ -95,59 +104,37 @@ Hooks.on('ready', ()=>
 	 */
 	constructor()
 	{
-		Hooks.call('motionTrackerInit', this);
-		this._buildCanvas();
+		this.tokenId = null;
+		this.user = null;
+		this.windowElement = null;
+		this.device = null;
+		this.ownerId = "";
+		this.viewedSceneId = "";
+		this._buildWindow();
 		this._initListeners();
-		this._buildMotionTrackerDevice();
-		this._startQueueHandler();
-		this._nextAnimationHandler();
 		this._welcomeMessage();
 	}
     
 	/**
-	 * Create and inject the motion tracker canvas resizing to the window total size.
+	 * Create the window that will host the canvas.
 	 *
 	 * @private
 	 */
-	_buildCanvas()
+	_buildWindow()
 	{
-		this.canvas = $('<div id="motion-tracker-canvas" style="position: absolute; left: 0; top: 0;pointer-events: none;"></div>');
-		if(MotionTracker.CONFIG.canvasZIndex == 'over')
-		{
-			this.canvas.css('z-index',1000);
-			this.canvas.appendTo($('body'));
-		} 
-		else
-		{
-			$("#motion-tracker").after(this.canvas);
-		}
+		const htmlContent = `<div id="motion-tracker-canvas" style="position: absolute; left: 0; top: 0;pointer-events: none;"></div>`;
+		this.window = new Dialog({
+			title: game.i18n.localize('MOTIONTRACKER.MotionTrackerDialogTitle'),
+			content: htmlContent,
+			buttons:
+			{
+
+			},
+			close: () => { this.close(true, false); }
+		});
+		this.canvas = null;
 		this.currentCanvasPosition = MotionTracker.CONFIG.canvasZIndex;
 		this.currentUseHighDPI = MotionTracker.CONFIG.useHighDPI;
-		this._resizeCanvas();
-	}
-    
-	/**
-	 * resize to the window total size.
-	 *
-	 * @private
-	 */
-	_resizeCanvas()
-	{
-		const sidebarWidth = $('#sidebar').width();
-		this.canvas.width(window.innerWidth - sidebarWidth + 'px');
-		this.canvas.height(window.innerHeight - 1 + 'px');
-	}
-    
-	/**
-	 * Build the device.
-	 *
-	 * @private
-	 */
-	_buildMotionTrackerDevice()
-	{
-		let config = MotionTracker.ALL_CONFIG();
-		this.device = new MotionTrackerDevice(this.canvas[0], config);
-		this.device.initialize();
 	}
     
 	/**
@@ -157,72 +144,20 @@ Hooks.on('ready', ()=>
 	 */
 	_initListeners()
 	{
-		this._rtime;
-		this._timeout = false;
-		$(window).resize(() =>
-		{
-			this._rtime = new Date();
-			if (this._timeout === false)
-			{
-				this._timeout = true;
-				setTimeout(this._resizeEnd.bind(this), 1000);
-			}
-		});
-
 		game.socket.on('module.motion_tracker', (request) =>
 		{
 			switch(request.type)
 			{
-				case 'show':
-					this.show(game.user, false, null, false, request.tokenReferenceId);
+				case 'open':
+					this.open(request.user, request.ownerId, request.tokenReferenceId, request.viewedSceneId);
 				break;
-				case 'hide':
-					this.hide(game.user, false);
+				case 'close':
+					this.close(false);
 				break;
 				case 'update':
 				break;
 			}
 		});
-	}
-
-	_resizeEnd()
-	{
-		if (new Date() - this._rtime < 1000)
-		{
-			setTimeout(this._resizeEnd.bind(this), 1000);
-		}
-		else
-		{
-			this._timeout = false;
-			//resize ended probably, lets remake the canvas
-			this.canvas[0].remove();
-			this.device.clearScene();
-			this._buildCanvas();
-			this._resizeCanvas();
-			let config = MotionTracker.ALL_CONFIG();
-			this.device = new MotionTrackerDevice(this.canvas[0], config);
-			this.device.initialize();
-			this.device.preloadSounds();
-		}
-	}
-    
-	/**
-	 * Start polling and watching te queue for animation requests.
-	 * Each request is resolved in sequence.
-	 *
-	 * @private
-	 */
-	_startQueueHandler()
-	{
-		this.queue = [];
-		setInterval(() =>
-		{
-			if (this.queue.length > 0)
-			{
-				let animate = this.queue.shift();
-				animate();
-			}
-		}, 100);
 	}
     
 	/**
@@ -264,6 +199,30 @@ Hooks.on('ready', ()=>
 	{
 		this.device.update(settings);
 	}
+
+	/**
+	 * Retrieve the canvas and build the motion tracking device then it renders
+	 *
+	 * @returns {Promise<boolean>} when resolved true if the animation was displayed, false if not.
+	 */
+	async setupDevice(dialog, html, data)
+	{
+		return new Promise((resolve, reject) =>
+		{
+			this.windowElement = dialog.element;
+			this.canvas = html.find('#motion-tracker-canvas');
+			if(this.canvas===null)
+				return new Promise((resolve, reject) => resolve());
+			const SIZE = game.settings.get(settings.REGISTER_CODE, 'size');
+			let config = MotionTracker.ALL_CONFIG();
+			this.device = new MotionTrackerDevice(this.canvas[0], config);
+			this.device.initialize();
+			this.device.setData(this.user, this.tokenId, this.viewedSceneId);
+			this.device.show();
+			this.resize(SIZE);
+			resolve();
+		});
+	}
     
 	/**
 	 * Show the motion tracker animation based on data configuration made by the User.
@@ -274,135 +233,67 @@ Hooks.on('ready', ()=>
 	 * @param blind if the call is blind for the current user
 	 * @returns {Promise<boolean>} when resolved true if the animation was displayed, false if not.
 	 */
-	show(user = game.user, synchronize = true, users = null, blind = false, tokenId = null)
+	async open(user = game.user, ownerId = game.user.id, tokenId = null, viewedScene = game.user.viewedScene)
 	{
-		if(tokenId === null && canvas.tokens.controlled.length>0)
-			tokenId = canvas.tokens.controlled[0].data._id;
-		
+		if(this.tokenId === null && canvas.tokens.controlled.length>0)
+			this.tokenId = canvas.tokens.controlled[0].data._id;
+		this.user = user;
+		this.ownerId = ownerId;
+		this.viewedSceneId = viewedScene;
 		return new Promise((resolve, reject) =>
 		{
-			if (synchronize)
+			if (this.ownerId==game.user.id)
 			{
-				users = users && users.length > 0 ? (users[0].id ? users.map(user => user.id) : users) : users;
-				game.socket.emit('module.motion_tracker', { type:'show', user: user.id, users: users, tokenReferenceId: tokenId });
+				game.socket.emit('module.motion_tracker', { type:'open', ownerId: this.ownerId, user: this.user, tokenReferenceId: this.tokenId, viewedSceneId: this.viewedSceneId });
 			}
-			this.device.setUserAndToken(tokenId, user);
-			this.device.show();
+			this.window.render(true);
 			resolve();
-			/*if(game.settings.get(settings.REGISTER_CODE,'immediatelyDisplayChatMessages'))
-			{
-				resolve();
-			}*/
 		});
 	}
-	hide(user = game.user, synchronize = true, users = null, blind = false)
+	close(forward, closeWindow = true)
 	{
+		this._timeout = false;
+		//resize ended probably, lets remake the canvas
+		this.canvas = null;
 		return new Promise((resolve, reject) =>
 		{
-			if (synchronize)
+			if (forward && this.ownerId===game.user.id)
 			{
-				users = users && users.length > 0 ? (users[0].id ? users.map(user => user.id) : users) : users;
-				game.socket.emit('module.motion_tracker', { type:'hide', user: user.id, users: users });
+				game.socket.emit('module.motion_tracker', { type:'close' });
 			}
-			this.device.hide();
-			resolve();
-			/*if(game.settings.get(settings.REGISTER_CODE,'immediatelyDisplayChatMessages'))
+			if(this.device)
 			{
-				resolve();
-			}*/
+				this.device.clearScene();
+				this.device.hide();
+			}
+			if(closeWindow)
+				this.window.close();
+			this.tokenId = null;
+			this.user = null;
+			this.ownerId = null;
+			this.windowElement = null;
+			resolve();
 		});
+	}
+
+	resize(size)
+	{
+		if(this.windowElement && this.canvas)
+		{
+			this.canvas[0].style.width =size+'px';
+			this.canvas[0].style.height=size+'px';
+			this.windowElement[0].style.width=size+'px';
+			this.windowElement[0].style.height=size+'px';
+			if(this.device!==null && this.device!==undefined)
+				this.device.resize(size);
+		}
 	}
 
 	toggle()
 	{
-		if(this.device.running)
-			this.hide();
+		if(this.device && this.device.running)
+			this.close(true);
 		else
-			this.show();
-	}
-    
-	_nextAnimationHandler()
-	{
-		let timing = 0;
-		this.nextAnimation = new Accumulator(timing, (items)=>
-		{
-			for(let item of items)
-				item.resolve(false);
-		});
-	}
-    
-	/**
-	 *
-	 * @private
-	 */
-	_beforeShow()
-	{
-	    if (this.timeoutHandle) {
-		clearTimeout(this.timeoutHandle);
-	    }
-	    this.canvas.stop(true);
-	    this.canvas.show();
-	}
-    
-	/**
-	 *
-	 * @private
-	 */
-	_afterShow()
-	{
-	}
-    
-	copyto(obj, res)
-	{
-		if (obj == null || typeof obj !== 'object')
-			return obj;
-		if (obj instanceof Array)
-		{
-			for (var i = obj.length - 1; i >= 0; --i)
-				res[i] = MotionTracker.copy(obj[i]);
-		}
-		else
-		{
-			for (var i in obj)
-			{
-				if (obj.hasOwnProperty(i))
-					res[i] = MotionTracker.copy(obj[i]);
-			}
-		}
-		return res;
-	}
-    
-	copy(obj)
-	{
-	    if (!obj) return obj;
-	    return MotionTracker.copyto(obj, new obj.constructor());
-	}
-    }
-    
-    class Accumulator
-    {
-	constructor (delay, onEnd)
-	{
-		this._timeout = null;
-		this._delay = delay;
-		this._onEnd = onEnd;
-		this._items = [];
-	}
-    
-	addItem (item)
-	{
-		this._items.push(item);
-		if(this._timeout)
-			clearTimeout(this._timeout);
-		let callback = function()
-		{
-			this._onEnd(this._items)
-			this._timeout = null
-			this._items = [];
-		}.bind(this);
-		if(this._delay)
-			this._timeout = setTimeout(callback, this._delay);
-		else
-			callback();
+			this.open();
 	}
     }

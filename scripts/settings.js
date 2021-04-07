@@ -1,12 +1,13 @@
 import {MotionTracker} from './motion_tracker.js';
 
-export function registerSettings()
+export function registerSettings(callbackResize)
 {
-  gmOnly_Settings();
+  gmOnly_Settings(callbackResize);
 }
 
 export const REGISTER_CODE = 'motion_tracker';
-export const MAX_SIZE = 200;
+export const MAX_SIZE = 512;
+export const MAX_PING_SIZE = 64;
 
     
 /**
@@ -47,7 +48,7 @@ class MotionTrackerConfig extends FormApplication
 	}
 }
 
-function gmOnly_Settings()
+function gmOnly_Settings(callbackResize)
 {
 
 	/*game.settings.registerMenu(REGISTER_CODE, REGISTER_CODE,
@@ -104,36 +105,6 @@ function gmOnly_Settings()
 		type : Boolean
 	});
 
-	game.settings.register(REGISTER_CODE,'centerTracker',
-	{
-		name : 'MOTIONTRACKER.centerTrackerTitle',
-		hint : 'MOTIONTRACKER.centerTrackerHint',
-		scope :'world',
-		config : true,
-		default : true,
-		type : Boolean
-	});
-
-	game.settings.register(REGISTER_CODE,'xOffset',
-	{
-		name : 'MOTIONTRACKER.xOffsetTitle',
-		hint : 'MOTIONTRACKER.xOffsetHint',
-		scope :'world',
-		config : true,
-		type: Number,
-		default: 0
-	});
-
-	game.settings.register(REGISTER_CODE,'yOffset',
-	{
-		name : 'MOTIONTRACKER.yOffsetTitle',
-		hint : 'MOTIONTRACKER.yOffsetHint',
-		scope :'world',
-		config : true,
-		type: Number,
-		default: 0
-	});
-
 	game.settings.register(REGISTER_CODE,'size',
 	{
 		name : 'MOTIONTRACKER.sizeTitle',
@@ -146,6 +117,10 @@ function gmOnly_Settings()
 		    min: 50,
 		    max: MAX_SIZE,
 		    step: 10
+		},
+		onChange: settings =>
+		{
+			callbackResize(settings)
 		}
 	});
 
