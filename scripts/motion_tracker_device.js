@@ -1,6 +1,3 @@
-import { RGBELoader } from '../libs/three-modules/RGBELoader.js';
-//import {GLTFExporter} from '../libs/three-modules/GLTFExporter.js';
-import { RendererStats } from '../libs/three-modules/threex.rendererstats.js';
 import * as THREE from '../libs/three.module.js';
 import * as settings from './settings.js'
 

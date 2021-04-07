@@ -1,5 +1,3 @@
-import {MotionTracker} from './motion_tracker.js';
-
 export function registerSettings(callbackResize)
 {
   gmOnly_Settings(callbackResize);
@@ -9,73 +7,8 @@ export const REGISTER_CODE = 'motion_tracker';
 export const MAX_SIZE = 512;
 export const MAX_PING_SIZE = 64;
 
-    
-/**
- * Form application to configure settings of the Motion Tracker.
- */
-class MotionTrackerConfig extends FormApplication
-{
-	static get defaultOptions()
-	{
-		return super.defaultOptions;
-	}
-
-	getData(options)
-	{
-		return {};
-	}
-
-	activateListeners(html)
-	{
-		super.activateListeners(html);
-	}
-
-	onApply(event)
-	{
-		event.preventDefault();
-	}
-
-	onReset()
-	{
-		this.reset = true;
-		this.render();
-	}
-
-	close(options)
-	{
-		super.close(options);
-		this.device.clearScene();
-	}
-}
-
 function gmOnly_Settings(callbackResize)
 {
-
-	/*game.settings.registerMenu(REGISTER_CODE, REGISTER_CODE,
-	{
-		name: 'MOTIONTRACKER.config',
-		label: 'MOTIONTRACKER.configTitle',
-		hint: 'MOTIONTRACKER.configHint',
-		icon: 'fas motion-tracker-ico',
-		type: MotionTrackerConfig,
-		restricted: false
-	});*/
-    
-	/*game.settings.register(REGISTER_CODE, 'settings',
-	{
-		name: 'Motion Tracker Settings',
-		scope: 'client',
-		default: MotionTracker.DEFAULT_OPTIONS,
-		type: Object,
-		config: false,
-		onChange: settings =>
-		{
-			if (game.motion_tracker)
-			{
-				// TODO
-			}
-		}
-	});*/
 
 	game.settings.register(REGISTER_CODE, 'enabled',
 	{
