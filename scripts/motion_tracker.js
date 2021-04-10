@@ -258,8 +258,12 @@ Hooks.on('ready', ()=>
 			{
 				game.socket.emit('module.motion_tracker', { type:'close' });
 			}
-			delete this.device;
-			this.device = null;
+			if(this.device)
+			{
+				this.device.stop();
+				delete this.device;
+				this.device = null;
+			}
 			if(closeWindow)
 				this.window.close();
 			this.tokenId = null;
@@ -290,7 +294,7 @@ Hooks.on('ready', ()=>
 
 	toggle()
 	{
-		if(this.device && this.device.running)
+		if(this.device)
 			this.close(true);
 		else
 			this.open();

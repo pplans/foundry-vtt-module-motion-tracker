@@ -68,6 +68,7 @@ export class MotionTrackerDevice
 
 	constructor(element_container, config)
 	{
+		MotionTrackerDevice.uniforms.time = 0.0;
 		//private variables
 		this.container = element_container;
 		this.dimensions = config.dimensions;
@@ -89,8 +90,8 @@ export class MotionTrackerDevice
 			sprite_background: null,
 			sprites_signals: [],
 			filter_background: new PIXI.Filter(undefined, MotionTrackerDevice.fragShaderBackground, MotionTrackerDevice.uniforms),
-			filter_ping: new PIXI.Filter(MotionTrackerDevice.vertShaderPing, MotionTrackerDevice.fragShaderPing, MotionTrackerDevice.uniforms)
-
+			filter_ping: new PIXI.Filter(MotionTrackerDevice.vertShaderPing, MotionTrackerDevice.fragShaderPing, MotionTrackerDevice.uniforms),
+			distanceMessage: new PIXI.Text('',{fontFamily : 'Roboto', fontSize: 24, fontWeight: 'bold', fill : 0x994d1a, align : 'center'})
 		};
 
 		this.ready = false;
@@ -191,8 +192,9 @@ export class MotionTrackerDevice
 		{
 			this.pixi.app.stage.addChild(this.pixi.sprites_signals[i]);
 		}
-
-		this.pixi.app.ticker.add(delta => this.update(delta));
+		this.pixi.distanceMessage.anchor.set(0.5, 0.5);
+		this.pixi.app.stage.addChild(this.pixi.distanceMessage);
+		this.pixi.app.ticker.add(this.update, this);
 	}
 
 	async reset()
@@ -243,6 +245,7 @@ export class MotionTrackerDevice
 		const distanceMax = game.settings.get(settings.REGISTER_CODE,'maxDistance');
 		const immobileStatuses = [CONFIG.Combat.defeatedStatusId, 'unconscious', 'asleep', 'stunned', 'paralysis']
 		const pos = computeTokenCenter(this.tokenReference);
+		let nearestDist = distanceMax;
 		tokens.forEach(token => 
 			{
 				let immobile = token.actorData?.effects?.find(e => immobileStatuses.some(s=>s===e.flags.core.statusId));
@@ -254,24 +257,35 @@ export class MotionTrackerDevice
 					oPos.y = (oPos.y-pos.y)/scene.data.grid;
 					const normDir = Math.sqrt(oPos.x*oPos.x+oPos.y*oPos.y);
 					let scanResult = { distance: scene.data.gridDistance*normDir, dir: { x: oPos.x/normDir, y: oPos.y/normDir } };
+					nearestDist = Math.min(nearestDist, scanResult.distance);
 					if(scanResult.distance<distanceMax)
 						this.signals.push(scanResult);
 				}
 			});
+		const centerCanvas = {x: .5*this.pixi.app.stage.width, y:.5*this.pixi.app.stage.height };
 		for(let i = 0;i<this.pixi.sprites_signals.length;++i)
 		{
 			if(i<this.signals.length)
 			{
 				this.pixi.sprites_signals[i].visible = true;
-				this.pixi.sprites_signals[i].x = this.distUnitPerPx*this.signals[i].dir.x*this.signals[i].distance+.5*this.pixi.app.stage.width;
-				this.pixi.sprites_signals[i].y = this.distUnitPerPx*this.signals[i].dir.y*this.signals[i].distance+.5*this.pixi.app.stage.height;
+				this.pixi.sprites_signals[i].x = this.distUnitPerPx*this.signals[i].dir.x*this.signals[i].distance+centerCanvas.x;
+				this.pixi.sprites_signals[i].y = this.distUnitPerPx*this.signals[i].dir.y*this.signals[i].distance+centerCanvas.y;
 			}
 			else
 				this.pixi.sprites_signals[i].visible = false;
 		}
+		this.pixi.distanceMessage.x = centerCanvas.x;
+		this.pixi.distanceMessage.y = this.pixi.app.stage.height-25.;
+		
+		let x = MotionTrackerDevice.uniforms.time*MotionTrackerDevice.uniforms.speed;
+		x = Math.ceil(3.*(x-Math.trunc(x)))-1.;
+
+		if(x>0.0)
+			this.pixi.distanceMessage.text = nearestDist.toFixed(2)+scene.data.gridUnits;
+
 		MotionTrackerDevice.uniforms.time+=delta;
-		MotionTrackerDevice.uniforms.centerx = .5*this.pixi.app.stage.width;
-		MotionTrackerDevice.uniforms.centery = .5*this.pixi.app.stage.height;
+		MotionTrackerDevice.uniforms.centerx = centerCanvas.x;
+		MotionTrackerDevice.uniforms.centery = centerCanvas.y;
 	}
 
 	setData(user = game.user, tokenId, viewedSceneId)
@@ -283,5 +297,11 @@ export class MotionTrackerDevice
 		const tokens = scene.data.tokens;
 		if(tokens.length>0)
 			this.tokenReference = tokens.find(tok => tok._id === tokenId);
+	}
+
+	stop()
+	{
+		this.pixi.app.ticker.stop();
+		this.pixi.app.ticker.destroy();
 	}
 }
