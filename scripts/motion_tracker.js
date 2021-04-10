@@ -207,21 +207,14 @@ Hooks.on('ready', ()=>
 	 */
 	async setupDevice(dialog, html, data)
 	{
-		return new Promise((resolve, reject) =>
-		{
-			this.windowElement = dialog.element;
-			this.canvas = html.find('#motion-tracker-canvas');
-			if(this.canvas===null)
-				return new Promise((resolve, reject) => resolve());
-			const SIZE = game.settings.get(settings.REGISTER_CODE, 'size');
-			let config = MotionTracker.ALL_CONFIG();
-			this.device = new MotionTrackerDevice(this.canvas[0], config);
-			this.device.initialize();
-			this.device.setData(this.user, this.tokenId, this.viewedSceneId);
-			this.device.show();
-			this.resize(SIZE);
-			resolve();
-		});
+		this.windowElement = dialog.element;
+		this.canvas = html.find('#motion-tracker-canvas');
+		await this.canvas!==null;
+		const SIZE = game.settings.get(settings.REGISTER_CODE, 'size');
+		let config = MotionTracker.ALL_CONFIG();
+		this.device = new MotionTrackerDevice(this.canvas[0], config);
+		this.device.setData(this.user, this.tokenId, this.viewedSceneId);
+		this.resize(SIZE);
 	}
     
 	/**
@@ -265,11 +258,8 @@ Hooks.on('ready', ()=>
 			{
 				game.socket.emit('module.motion_tracker', { type:'close' });
 			}
-			if(this.device)
-			{
-				this.device.clearScene();
-				this.device.hide();
-			}
+			delete this.device;
+			this.device = null;
 			if(closeWindow)
 				this.window.close();
 			this.tokenId = null;
