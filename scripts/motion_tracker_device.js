@@ -2,6 +2,8 @@ import * as settings from './settings.js'
 
 export class MotionTrackerDevice
 {
+	static PIXILoader = null;
+
 	constructor(element_container, config)
 	{
 		//private variables
@@ -22,7 +24,6 @@ export class MotionTrackerDevice
 		// Renderer specific
 		this.pixi = {
 			app: null,
-			loader: new PIXI.Loader(),
 			sprite_background: null,
 			sprites_signals: [],
 			center: {x:0, y: 0}
@@ -54,14 +55,22 @@ export class MotionTrackerDevice
 
 	loadTextures()
 	{
-		// clean cache
-		PIXI.Texture.removeFromCache(this.textures.background);
-		PIXI.Texture.removeFromCache(this.textures.ping);
-		PIXI.BaseTexture.removeFromCache(this.textures.background);
-		PIXI.BaseTexture.removeFromCache(this.textures.ping);
-		this.pixi.loader
-		.add([this.textures.background, this.textures.ping])
-		.load(this.loadTexturesFinish.bind(this));
+		if(MotionTrackerDevice.PIXILoader === null)
+		{
+			MotionTrackerDevice.PIXILoader =  new PIXI.Loader();
+			// clean cache
+			PIXI.Texture.removeFromCache(this.textures.background);
+			PIXI.Texture.removeFromCache(this.textures.ping);
+			PIXI.BaseTexture.removeFromCache(this.textures.background);
+			PIXI.BaseTexture.removeFromCache(this.textures.ping);
+			MotionTrackerDevice.PIXILoader
+			.add([this.textures.background, this.textures.ping])
+			.load(this.loadTexturesFinish.bind(this));
+		}
+		else
+		{
+			this.loadTexturesFinish(); // simply apply the end process
+		}
 	}
 
 	async loadTexturesFinish()
