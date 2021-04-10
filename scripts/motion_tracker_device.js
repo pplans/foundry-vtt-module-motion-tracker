@@ -3,6 +3,68 @@ import * as settings from './settings.js'
 export class MotionTrackerDevice
 {
 	static PIXILoader = null;
+	// BEGIN SHADER BLOCK
+	static signalFunc = '\
+	float signal(float x)\
+	{\
+		x = fract(x);\
+		return max(\
+			fract(3.*x)*min(1., floor(3.*fract(x))),\
+			 floor(.5*(ceil(3.*x)-1.))\
+			 );\
+	}\
+	';
+	static fragShaderBackground = '\
+		varying vec2 vTextureCoord;\
+		uniform sampler2D uSampler;\
+		uniform float time;\
+		uniform float speed;\
+		uniform float centerx;\
+		uniform float centery;\
+		'+MotionTrackerDevice.signalFunc+'\
+		void main(void)\
+		{\
+			vec4 tex = texture2D(uSampler, vTextureCoord);\
+			vec2 d = normalize(vTextureCoord-vec2(0.5));\
+			float s = signal(speed*time);\
+			s = s>0.05?(tex.a*pow(clamp(1.-length(vTextureCoord-(s*d+vec2(0.5)))-.75, 0., 1.)*4., 16.)):0.;\
+	   		gl_FragColor = mix(vec4(tex.rgb, 1.), vec4(1.), s);\
+		}';
+	static vertShaderPing = '\
+		attribute vec2 aVertexPosition;\
+		attribute vec2 aTextureCoord;\
+		\
+		uniform mat3 projectionMatrix;\
+		\
+		varying vec2 vTextureCoord;\
+		varying vec2 vWorldCoord;\
+		\
+		void main(void)\
+		{\
+			vWorldCoord = aVertexPosition;\
+			gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);\
+			vTextureCoord = aTextureCoord;\
+		}';
+	static fragShaderPing = '\
+		varying vec2 vTextureCoord;\
+		varying vec2 vWorldCoord;\
+		uniform sampler2D uSampler;\
+		uniform float time;\
+		uniform float speed;\
+		uniform float centerx;\
+		uniform float centery;\
+		'+MotionTrackerDevice.signalFunc+'\
+		void main(void)\
+		{\
+			vec2 c = vec2(centerx, centery);\
+			vec2 cp = vWorldCoord-c;\
+			vec2 d = normalize(cp);\
+			float s = 2.*signal(speed*time);\
+			s = s*length(c*d)>length(cp)?1.:0.;\
+			gl_FragColor = s*texture2D(uSampler, vTextureCoord).rrrr;\
+		}';
+	// END SHADER BLOCK
+	static uniforms = {time: 0., speed: 0.01, centerx: 0., centery: 0.};
 
 	constructor(element_container, config)
 	{
@@ -26,7 +88,9 @@ export class MotionTrackerDevice
 			app: null,
 			sprite_background: null,
 			sprites_signals: [],
-			center: {x:0, y: 0}
+			filter_background: new PIXI.Filter(undefined, MotionTrackerDevice.fragShaderBackground, MotionTrackerDevice.uniforms),
+			filter_ping: new PIXI.Filter(MotionTrackerDevice.vertShaderPing, MotionTrackerDevice.fragShaderPing, MotionTrackerDevice.uniforms)
+
 		};
 
 		this.ready = false;
@@ -58,11 +122,6 @@ export class MotionTrackerDevice
 		if(MotionTrackerDevice.PIXILoader === null)
 		{
 			MotionTrackerDevice.PIXILoader =  new PIXI.Loader();
-			// clean cache
-			PIXI.Texture.removeFromCache(this.textures.background);
-			PIXI.Texture.removeFromCache(this.textures.ping);
-			PIXI.BaseTexture.removeFromCache(this.textures.background);
-			PIXI.BaseTexture.removeFromCache(this.textures.ping);
 			MotionTrackerDevice.PIXILoader
 			.add([this.textures.background, this.textures.ping])
 			.load(this.loadTexturesFinish.bind(this));
@@ -81,13 +140,17 @@ export class MotionTrackerDevice
 		this.distUnitPerPx = 0.8*SIZE*.5/distanceMax;
 
 		//Create the `cat` sprite
+		PIXI.utils.TextureCache[this.textures.background].baseTexture.alphaMode = PIXI.ALPHA_MODES.NO_PREMULTIPLIED_ALPHA;
+		PIXI.utils.TextureCache[this.textures.background].baseTexture.update();
 		if(this.pixi.sprite_background===null)
 			this.pixi.sprite_background = new PIXI.Sprite(PIXI.utils.TextureCache[this.textures.background]);
 		
+		this.pixi.sprite_background.blendMode = PIXI.BLEND_MODES.SCREEN;
 		this.pixi.sprite_background.x = 0;
 		this.pixi.sprite_background.y = 0;
 		this.pixi.sprite_background.width = SIZE;
 		this.pixi.sprite_background.height = SIZE;
+		this.pixi.sprite_background.filters = [this.pixi.filter_background];
 
 		if(this.pixi.sprites_signals.length==0)
 		{
@@ -98,6 +161,7 @@ export class MotionTrackerDevice
 				this.pixi.sprites_signals[i].y = 0;
 				this.pixi.sprites_signals[i].anchor.set(0.5, 0.5);
 				this.pixi.sprites_signals[i].visible = false;
+				this.pixi.sprites_signals[i].filters = [this.pixi.filter_ping];
 				this.pixi.sprites_signals[i].width = Math.max(32, SIZE/32*this.distUnitPerPx);
 				this.pixi.sprites_signals[i].height = Math.max(32, SIZE/32*this.distUnitPerPx);
 			}
@@ -200,11 +264,14 @@ export class MotionTrackerDevice
 			{
 				this.pixi.sprites_signals[i].visible = true;
 				this.pixi.sprites_signals[i].x = this.distUnitPerPx*this.signals[i].dir.x*this.signals[i].distance+.5*this.pixi.app.stage.width;
-				this.pixi.sprites_signals[i].y = this.distUnitPerPx*this.signals[i].dir.y*this.signals[i].distance+.5*this.pixi.app.stage.width;
+				this.pixi.sprites_signals[i].y = this.distUnitPerPx*this.signals[i].dir.y*this.signals[i].distance+.5*this.pixi.app.stage.height;
 			}
 			else
 				this.pixi.sprites_signals[i].visible = false;
 		}
+		MotionTrackerDevice.uniforms.time+=delta;
+		MotionTrackerDevice.uniforms.centerx = .5*this.pixi.app.stage.width;
+		MotionTrackerDevice.uniforms.centery = .5*this.pixi.app.stage.height;
 	}
 
 	setData(user = game.user, tokenId, viewedSceneId)
