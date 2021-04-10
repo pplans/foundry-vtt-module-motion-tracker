@@ -235,7 +235,11 @@ Hooks.on('ready', ()=>
 	 */
 	async open(user = game.user, ownerId = game.user.id, tokenId = null, viewedScene = game.user.viewedScene)
 	{
-		if(this.tokenId === null && canvas.tokens.controlled.length>0)
+		if(tokenId !== null)
+		{
+			this.tokenId = tokenId;
+		}
+		else if(this.tokenId === null && canvas.tokens.controlled.length>0)
 			this.tokenId = canvas.tokens.controlled[0].data._id;
 		this.user = user;
 		this.ownerId = ownerId;

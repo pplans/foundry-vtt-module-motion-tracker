@@ -253,39 +253,35 @@ export class MotionTrackerDevice
 
 		const scene = game.scenes.get(this.viewedSceneId);
 		const tokens = scene.data.tokens;
-		const tokensSelected = canvas.tokens.controlled;
 		const seePlayers = game.settings.get(settings.REGISTER_CODE,'seePlayers');
 		const distanceMax = game.settings.get(settings.REGISTER_CODE,'maxDistance');
 		const distPerPx = 0.8*this.globalScale*settings.MAX_SIZE*.5/distanceMax;
 		const immobileStatuses = [CONFIG.Combat.defeatedStatusId, 'unconscious', 'asleep', 'stunned', 'paralysis']
-		if(tokensSelected.length>0)
+		const pos =
 		{
-			const pos =
+			x:0.5*this.tokenReference.scale*this.tokenReference.width+this.tokenReference.x,
+			y:0.5*this.tokenReference.scale*this.tokenReference.height+this.tokenReference.y
+		};
+		tokens.forEach(token => 
 			{
-				x:0.5*this.tokenReference.scale*this.tokenReference.width+this.tokenReference.x,
-				y:0.5*this.tokenReference.scale*this.tokenReference.height+this.tokenReference.y
-			};
-			tokens.forEach(token => 
+				let immobile = token.actorData?.effects?.find(e => immobileStatuses.some(s=>s===e.flags.core.statusId));
+				
+				if(!immobile && token._id!==this.tokenReference._id && !token.hidden)
 				{
-					let immobile = token.actorData?.effects?.find(e => immobileStatuses.some(s=>s===e.flags.core.statusId));
-					
-					if(!immobile && token._id!==this.tokenReference._id && !token.hidden)
-					{
-						const oPos = {
-							x:0.5*token.scale*token.width+token.x,
-							y:0.5*token.scale*token.height+token.y
-						};
-						oPos.x = (oPos.x-pos.x)/scene.data.grid;
-						oPos.y = (pos.y-oPos.y)/scene.data.grid;
-						const normDir = Math.sqrt(oPos.x*oPos.x+oPos.y*oPos.y);
-						let scanResult = { distance: scene.data.gridDistance*normDir };
-						if(scanResult.distance>distanceMax)
-							return;
-						scanResult.dir = {x: oPos.x/normDir, y: oPos.y/normDir};
-						this.signals.push(scanResult);
-					}
-				});
-		}
+					const oPos = {
+						x:0.5*token.scale*token.width+token.x,
+						y:0.5*token.scale*token.height+token.y
+					};
+					oPos.x = (oPos.x-pos.x)/scene.data.grid;
+					oPos.y = (pos.y-oPos.y)/scene.data.grid;
+					const normDir = Math.sqrt(oPos.x*oPos.x+oPos.y*oPos.y);
+					let scanResult = { distance: scene.data.gridDistance*normDir };
+					if(scanResult.distance>distanceMax)
+						return;
+					scanResult.dir = {x: oPos.x/normDir, y: oPos.y/normDir};
+					this.signals.push(scanResult);
+				}
+			});
 		for(let i = 0;i<this.signalsObj.length;++i)
 		{
 			if(i<this.signals.length)
@@ -354,11 +350,8 @@ export class MotionTrackerDevice
 		this.viewedSceneId = viewedSceneId;
 		const scene = game.scenes.get(this.viewedSceneId);
 		const tokens = scene.data.tokens;
-		const tokensSelected = canvas.tokens.controlled;
-		if(tokensSelected.length>0)
-		{
+		if(tokens.length>0)
 			this.tokenReference = tokens.find(tok => tok._id === tokenId);
-		}
 	}
 
 	show()
