@@ -305,10 +305,25 @@ export class MotionTrackerDevice
 		this.pixi.distanceMessage.y = this.pixi.app.stage.height-5.-32.*(this.pixi.app.stage.width-settings.MIN_SIZE)/(settings.MAX_SIZE-settings.MIN_SIZE);
 		
 		let x = MotionTrackerDevice.uniforms.time*MotionTrackerDevice.uniforms.speed;
-		x = Math.ceil(3.*(x-Math.trunc(x)))-1.;
+		function fract(x)
+		{
+			return x-Math.trunc(x);
+		}
+		x = fract(x);
+		x = Math.max(fract(3.*x)*Math.min(1., Math.floor(3.*fract(x))),
+			Math.floor(.5*(Math.ceil(3.*x)-1.))
+		);
 
-		if(x>0.0)
+		if(x*distanceMax>nearestDist)
+		{
 			this.pixi.distanceMessage.text = nearestDist.toFixed(2)+scene.data.gridUnits;
+			this.pixi.distanceMessage.alpha = x;
+		}
+		else
+		{
+			this.pixi.distanceMessage.text = '0'+scene.data.gridUnits;
+			this.pixi.distanceMessage.alpha = 1.-x;
+		}
 
 		MotionTrackerDevice.uniformsBackground.time += delta;
 		MotionTrackerDevice.uniformsBackground.centerx = centerCanvas.x;
