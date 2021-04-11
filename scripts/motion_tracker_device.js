@@ -61,7 +61,7 @@ export class MotionTrackerDevice
 			vec2 d = normalize(cp);\
 			float s = 2.*signal(speed*time);\
 			s = s*length(c*d)>length(cp)?1.:0.;\
-			gl_FragColor = texture2D(uSampler, vTextureCoord).rrrr;\
+			gl_FragColor = s*texture2D(uSampler, vTextureCoord).rrrr;\
 		}';
 	// END SHADER BLOCK
 	static uniformsBackground = {time: 0., speed: 0.01, centerx: 0., centery: 0., uSampler: null};
