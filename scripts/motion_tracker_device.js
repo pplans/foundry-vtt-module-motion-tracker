@@ -64,11 +64,16 @@ export class MotionTrackerDevice
 			gl_FragColor = s*texture2D(uSampler, vTextureCoord).rrrr;\
 		}';
 	// END SHADER BLOCK
+	static uniformsBackground = {time: 0., speed: 0.01, centerx: 0., centery: 0., uSampler: null};
 	static uniforms = {time: 0., speed: 0.01, centerx: 0., centery: 0.};
+
+	static SCREEN_ADDITIONAL_TEXEL_HEIGHT = 64;
+	static SCREEN_ADDITIONAL_CANVAS_HEIGHT = 64./1024;
 
 	constructor(element_container, config)
 	{
 		MotionTrackerDevice.uniforms.time = 0.0;
+		MotionTrackerDevice.uniformsBackground.time = 0.0;
 		//private variables
 		this.container = element_container;
 		this.dimensions = config.dimensions;
@@ -79,8 +84,11 @@ export class MotionTrackerDevice
 
 		this.signals = [];
 		this.signalsMax = 20;
+
+		const SIZE = game.settings.get(settings.REGISTER_CODE, 'size');
 		
 		const distanceMax = game.settings.get(settings.REGISTER_CODE,'maxDistance');
+		// TODO distUnitPerPx in 2D, see TODO investigate in signals position computation
 		this.distUnitPerPx = 0.8*settings.MAX_SIZE*.5/distanceMax;
 
 		this.soundBank = {};
@@ -91,14 +99,14 @@ export class MotionTrackerDevice
 			sprites_signals: [],
 			filter_background: new PIXI.Filter(undefined, MotionTrackerDevice.fragShaderBackground, MotionTrackerDevice.uniforms),
 			filter_ping: new PIXI.Filter(MotionTrackerDevice.vertShaderPing, MotionTrackerDevice.fragShaderPing, MotionTrackerDevice.uniforms),
-			distanceMessage: new PIXI.Text('',{fontFamily : 'Roboto', fontSize: 24, fontWeight: 'bold', fill : 0x994d1a, align : 'center'})
+			distanceMessage: new PIXI.Text('',{fontFamily : 'Roboto', fontSize: Math.max(12, 32*(SIZE-settings.MIN_SIZE)/(settings.MAX_SIZE-settings.MIN_SIZE)), fontWeight: 'bold', fill : 0x994d1a, align : 'center'})
 		};
 
 		this.ready = false;
 
 		// data
 		this.textures = {
-			background: 'modules/motion_tracker/textures/motion_tracker_background.webp',
+			background: 'modules/motion_tracker/textures/motion_tracker_background.png',
 			ping: 'modules/motion_tracker/textures/motion_tracker_ping.webp',
 		};
 		this.loadTextures();
@@ -144,14 +152,32 @@ export class MotionTrackerDevice
 		PIXI.utils.TextureCache[this.textures.background].baseTexture.alphaMode = PIXI.ALPHA_MODES.NO_PREMULTIPLIED_ALPHA;
 		PIXI.utils.TextureCache[this.textures.background].baseTexture.update();
 		if(this.pixi.sprite_background===null)
-			this.pixi.sprite_background = new PIXI.Sprite(PIXI.utils.TextureCache[this.textures.background]);
+		{
+			MotionTrackerDevice.uniformsBackground.uSampler = PIXI.utils.TextureCache[this.textures.background];
+			const backgroundShdr = PIXI.Shader.from(null, MotionTrackerDevice.fragShaderBackground, MotionTrackerDevice.uniformsBackground);
+			const QuadGeometry = new PIXI.Geometry()
+			    .addAttribute('aVertexPosition', // the attribute name
+				[
+					0, 0, // x, y
+					SIZE, 0, // x, y
+					SIZE, SIZE+MotionTrackerDevice.SCREEN_ADDITIONAL_CANVAS_HEIGHT,
+					0, SIZE+MotionTrackerDevice.SCREEN_ADDITIONAL_CANVAS_HEIGHT
+				], // x, y
+				2) // the size of the attribute
+			    .addAttribute('aTextureCoord', // the attribute name
+				[
+					0, 0, // u, v
+					1, 0, // u, v
+					1, 1,
+					0, 1
+				], // u, v
+				2) // the size of the attribute
+			    .addIndex([0, 1, 2, 0, 2, 3]);
+			this.pixi.sprite_background = new PIXI.Mesh(QuadGeometry, backgroundShdr);
+		}
 		
-		this.pixi.sprite_background.blendMode = PIXI.BLEND_MODES.SCREEN;
 		this.pixi.sprite_background.x = 0;
 		this.pixi.sprite_background.y = 0;
-		this.pixi.sprite_background.width = SIZE;
-		this.pixi.sprite_background.height = SIZE;
-		this.pixi.sprite_background.filters = [this.pixi.filter_background];
 
 		if(this.pixi.sprites_signals.length==0)
 		{
@@ -177,7 +203,7 @@ export class MotionTrackerDevice
 		// PIXI context creation
 		if(this.pixi.app === null)
 		{
-			this.pixi.app = new PIXI.Application({width: SIZE, height: SIZE});
+			this.pixi.app = new PIXI.Application({width: SIZE, height: SIZE+MotionTrackerDevice.SCREEN_ADDITIONAL_CANVAS_HEIGHT});
 		}
 		
 		this.pixi.app.stage.removeChildren();
@@ -187,6 +213,7 @@ export class MotionTrackerDevice
 		// setup base
 		this.pixi.app.renderer.backgroundColor = 0x000000;
 		
+		this.pixi.sprite_background.blendMode = PIXI.BLEND_MODES.ADD;
 		this.pixi.app.stage.addChild(this.pixi.sprite_background);
 		for(let i = 0;i<this.pixi.sprites_signals.length;++i)
 		{
@@ -211,7 +238,7 @@ export class MotionTrackerDevice
 		if(this.pixi.app && this.pixi.app.render)
 		{
 			this.pixi.app.renderer.autoDensity = true;
-			this.pixi.app.renderer.resize(size, size);
+			this.pixi.app.renderer.resize(size, size+MotionTrackerDevice.SCREEN_ADDITIONAL_CANVAS_HEIGHT);
 		}
 	}
 
@@ -262,20 +289,21 @@ export class MotionTrackerDevice
 						this.signals.push(scanResult);
 				}
 			});
-		const centerCanvas = {x: .5*this.pixi.app.stage.width, y:.5*this.pixi.app.stage.height };
+		const centerCanvas = {x: .5*this.pixi.app.stage.width, y:.5*this.pixi.app.stage.width }; // no longer height due to additional space, the MT is square
 		for(let i = 0;i<this.pixi.sprites_signals.length;++i)
 		{
 			if(i<this.signals.length)
 			{
 				this.pixi.sprites_signals[i].visible = true;
 				this.pixi.sprites_signals[i].x = this.distUnitPerPx*this.signals[i].dir.x*this.signals[i].distance+centerCanvas.x;
-				this.pixi.sprites_signals[i].y = this.distUnitPerPx*this.signals[i].dir.y*this.signals[i].distance+centerCanvas.y;
+				// 0.944, background is not really square, TODO investigate
+				this.pixi.sprites_signals[i].y = this.distUnitPerPx*this.signals[i].dir.y*this.signals[i].distance+0.944*centerCanvas.y;
 			}
 			else
 				this.pixi.sprites_signals[i].visible = false;
 		}
 		this.pixi.distanceMessage.x = centerCanvas.x;
-		this.pixi.distanceMessage.y = this.pixi.app.stage.height-25.;
+		this.pixi.distanceMessage.y = this.pixi.app.stage.height-5.-32.*(this.pixi.app.stage.width-settings.MIN_SIZE)/(settings.MAX_SIZE-settings.MIN_SIZE);
 		
 		let x = MotionTrackerDevice.uniforms.time*MotionTrackerDevice.uniforms.speed;
 		x = Math.ceil(3.*(x-Math.trunc(x)))-1.;
@@ -283,6 +311,9 @@ export class MotionTrackerDevice
 		if(x>0.0)
 			this.pixi.distanceMessage.text = nearestDist.toFixed(2)+scene.data.gridUnits;
 
+		MotionTrackerDevice.uniformsBackground.time += delta;
+		MotionTrackerDevice.uniformsBackground.centerx = centerCanvas.x;
+		MotionTrackerDevice.uniformsBackground.centery = centerCanvas.y;
 		MotionTrackerDevice.uniforms.time+=delta;
 		MotionTrackerDevice.uniforms.centerx = centerCanvas.x;
 		MotionTrackerDevice.uniforms.centery = centerCanvas.y;
