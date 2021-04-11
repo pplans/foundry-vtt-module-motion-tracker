@@ -37,3 +37,4 @@ Freki - pushing me around to make this happen and giving me a lot of ideas and f
 Sasmira - a lot of feedbacks and contradictory ideas that are valued
 Minarkhaios - fadeout
 Foundry community, specially Alien RPG one
+Some parts of the code may resemble to dice-so-nice sources, this project is actually based on dice-so-nice and tends to get as far as possible to it with time
