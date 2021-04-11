@@ -22,7 +22,7 @@ When hitted, the button will scan for the nearest active and visibles tokens bas
 * improved ping textures
 * once the tracker is enabled, the origin remains the same and is streamed correctly
 
-# v0.0.2
+## v0.0.2
 * resize
 
 ## v0.0.1
