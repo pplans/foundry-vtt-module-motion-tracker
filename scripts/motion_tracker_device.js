@@ -61,7 +61,7 @@ export class MotionTrackerDevice
 			vec2 d = normalize(cp);\
 			float s = 2.*signal(speed*time);\
 			s = s*length(c*d)>length(cp)?1.:0.;\
-			gl_FragColor = s*texture2D(uSampler, vTextureCoord).rrrr;\
+			gl_FragColor = texture2D(uSampler, vTextureCoord).rrrr;\
 		}';
 	// END SHADER BLOCK
 	static uniformsBackground = {time: 0., speed: 0.01, centerx: 0., centery: 0., uSampler: null};
@@ -69,6 +69,7 @@ export class MotionTrackerDevice
 
 	static SCREEN_ADDITIONAL_TEXEL_HEIGHT = 64;
 	static SCREEN_ADDITIONAL_CANVAS_HEIGHT = 64./1024;
+	static BACKGROUND_MT_PADDING_SCALE_TOTAL = 0.125;
 
 	constructor(element_container, config)
 	{
@@ -88,8 +89,7 @@ export class MotionTrackerDevice
 		const SIZE = game.settings.get(settings.REGISTER_CODE, 'size');
 		
 		const distanceMax = game.settings.get(settings.REGISTER_CODE,'maxDistance');
-		// TODO distUnitPerPx in 2D, see TODO investigate in signals position computation
-		this.distUnitPerPx = 0.8*settings.MAX_SIZE*.5/distanceMax;
+		this.distUnitPerPx = (1.-MotionTrackerDevice.BACKGROUND_MT_PADDING_SCALE_TOTAL)*settings.MAX_SIZE*.5/distanceMax;
 
 		this.soundBank = {};
 		// Renderer specific
@@ -146,7 +146,7 @@ export class MotionTrackerDevice
 		const SIZE = game.settings.get(settings.REGISTER_CODE, 'size');
 		
 		const distanceMax = game.settings.get(settings.REGISTER_CODE,'maxDistance');
-		this.distUnitPerPx = 0.8*SIZE*.5/distanceMax;
+		this.distUnitPerPx = (1.-MotionTrackerDevice.BACKGROUND_MT_PADDING_SCALE_TOTAL)*SIZE*.5/distanceMax;
 
 		//Create the `cat` sprite
 		PIXI.utils.TextureCache[this.textures.background].baseTexture.alphaMode = PIXI.ALPHA_MODES.NO_PREMULTIPLIED_ALPHA;
@@ -282,7 +282,7 @@ export class MotionTrackerDevice
 					const oPos = computeTokenCenter(token);
 					oPos.x = (oPos.x-pos.x)/scene.data.grid;
 					oPos.y = (oPos.y-pos.y)/scene.data.grid;
-					const normDir = Math.sqrt(oPos.x*oPos.x+oPos.y*oPos.y);
+					const normDir = (Math.abs(oPos.x)<0.01 && Math.abs(oPos.y)<0.01)?0.01:Math.sqrt(oPos.x*oPos.x+oPos.y*oPos.y);
 					let scanResult = { distance: scene.data.gridDistance*normDir, dir: { x: oPos.x/normDir, y: oPos.y/normDir } };
 					nearestDist = Math.min(nearestDist, scanResult.distance);
 					if(scanResult.distance<distanceMax)
@@ -296,8 +296,7 @@ export class MotionTrackerDevice
 			{
 				this.pixi.sprites_signals[i].visible = true;
 				this.pixi.sprites_signals[i].x = this.distUnitPerPx*this.signals[i].dir.x*this.signals[i].distance+centerCanvas.x;
-				// 0.944, background is not really square, TODO investigate
-				this.pixi.sprites_signals[i].y = this.distUnitPerPx*this.signals[i].dir.y*this.signals[i].distance+0.944*centerCanvas.y;
+				this.pixi.sprites_signals[i].y = this.distUnitPerPx*this.signals[i].dir.y*this.signals[i].distance+centerCanvas.y-MotionTrackerDevice.SCREEN_ADDITIONAL_CANVAS_HEIGHT*centerCanvas.y;
 			}
 			else
 				this.pixi.sprites_signals[i].visible = false;
