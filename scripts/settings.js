@@ -4,6 +4,7 @@ export function registerSettings(callbackResize)
 }
 
 export const REGISTER_CODE = 'motion_tracker';
+export const MIN_SIZE = 64;
 export const MAX_SIZE = 512;
 export const MAX_PING_SIZE = 64;
 
@@ -47,7 +48,7 @@ function gmOnly_Settings(callbackResize)
 		type: Number,
 		default: 200,
 		range: {
-		    min: 50,
+		    min: MIN_SIZE,
 		    max: MAX_SIZE,
 		    step: 10
 		},
