@@ -28,6 +28,7 @@ export class MotionTrackerDevice
 			vec2 d = normalize(vTextureCoord-vec2(0.5));\
 			float s = signal(speed*time);\
 			s = s>0.05?(tex.a*pow(clamp(1.-length(vTextureCoord-(s*d+vec2(0.5)))-.75, 0., 1.)*4., 16.)):0.;\
+			s *= 1.+log(-fract(speed*time)+1.);\
 	   		gl_FragColor = mix(vec4(tex.rgb, 1.), vec4(1.), s);\
 		}';
 	static vertShaderPing = '\
@@ -53,6 +54,7 @@ export class MotionTrackerDevice
 		uniform float speed;\
 		uniform float centerx;\
 		uniform float centery;\
+		uniform float distmax;\
 		'+MotionTrackerDevice.signalFunc+'\
 		void main(void)\
 		{\
@@ -60,12 +62,12 @@ export class MotionTrackerDevice
 			vec2 cp = vWorldCoord-c;\
 			vec2 d = normalize(cp);\
 			float s = 2.*signal(speed*time);\
-			s = s*length(c*d)>length(cp)?1.:0.;\
+			s = s*length(c*d)>length(cp)?exp(-1.5*fract(speed*time)):0.;\
 			gl_FragColor = s*texture2D(uSampler, vTextureCoord).rrrr;\
 		}';
 	// END SHADER BLOCK
 	static uniformsBackground = {time: 0., speed: 0.01, centerx: 0., centery: 0., uSampler: null};
-	static uniforms = {time: 0., speed: 0.01, centerx: 0., centery: 0.};
+	static uniformsPing = {time: 0., speed: 0.01, centerx: 0., centery: 0., distmax: 0.};
 
 	static SCREEN_ADDITIONAL_TEXEL_HEIGHT = 64;
 	static SCREEN_ADDITIONAL_CANVAS_HEIGHT = 64./1024;
@@ -73,7 +75,7 @@ export class MotionTrackerDevice
 
 	constructor(element_container, config)
 	{
-		MotionTrackerDevice.uniforms.time = 0.0;
+		MotionTrackerDevice.uniformsPing.time = 0.0;
 		MotionTrackerDevice.uniformsBackground.time = 0.0;
 		//private variables
 		this.container = element_container;
@@ -89,6 +91,7 @@ export class MotionTrackerDevice
 		const SIZE = game.settings.get(settings.REGISTER_CODE, 'size');
 		
 		const distanceMax = game.settings.get(settings.REGISTER_CODE,'maxDistance');
+		MotionTrackerDevice.uniformsPing.distmax = distanceMax;
 		this.distUnitPerPx = (1.-MotionTrackerDevice.BACKGROUND_MT_PADDING_SCALE_TOTAL)*settings.MAX_SIZE*.5/distanceMax;
 
 		this.soundBank = {};
@@ -97,8 +100,7 @@ export class MotionTrackerDevice
 			app: null,
 			sprite_background: null,
 			sprites_signals: [],
-			filter_background: new PIXI.Filter(undefined, MotionTrackerDevice.fragShaderBackground, MotionTrackerDevice.uniforms),
-			filter_ping: new PIXI.Filter(MotionTrackerDevice.vertShaderPing, MotionTrackerDevice.fragShaderPing, MotionTrackerDevice.uniforms),
+			filter_ping: new PIXI.Filter(MotionTrackerDevice.vertShaderPing, MotionTrackerDevice.fragShaderPing, MotionTrackerDevice.uniformsPing),
 			distanceMessage: new PIXI.Text('',{fontFamily : 'Roboto', fontSize: Math.max(12, 32*(SIZE-settings.MIN_SIZE)/(settings.MAX_SIZE-settings.MIN_SIZE)), fontWeight: 'bold', fill : 0x994d1a, align : 'center'})
 		};
 
@@ -270,6 +272,7 @@ export class MotionTrackerDevice
 		const tokens = scene.data.tokens;
 		const seePlayers = game.settings.get(settings.REGISTER_CODE,'seePlayers');
 		const distanceMax = game.settings.get(settings.REGISTER_CODE,'maxDistance');
+		MotionTrackerDevice.uniformsPing.distmax = distanceMax;
 		const immobileStatuses = [CONFIG.Combat.defeatedStatusId, 'unconscious', 'asleep', 'stunned', 'paralysis']
 		const pos = computeTokenCenter(this.tokenReference);
 		let nearestDist = distanceMax;
@@ -304,7 +307,7 @@ export class MotionTrackerDevice
 		this.pixi.distanceMessage.x = centerCanvas.x;
 		this.pixi.distanceMessage.y = this.pixi.app.stage.height-5.-32.*(this.pixi.app.stage.width-settings.MIN_SIZE)/(settings.MAX_SIZE-settings.MIN_SIZE);
 		
-		let x = MotionTrackerDevice.uniforms.time*MotionTrackerDevice.uniforms.speed;
+		let x = MotionTrackerDevice.uniformsPing.time*MotionTrackerDevice.uniformsPing.speed;
 		function fract(x)
 		{
 			return x-Math.trunc(x);
@@ -328,9 +331,9 @@ export class MotionTrackerDevice
 		MotionTrackerDevice.uniformsBackground.time += delta;
 		MotionTrackerDevice.uniformsBackground.centerx = centerCanvas.x;
 		MotionTrackerDevice.uniformsBackground.centery = centerCanvas.y;
-		MotionTrackerDevice.uniforms.time+=delta;
-		MotionTrackerDevice.uniforms.centerx = centerCanvas.x;
-		MotionTrackerDevice.uniforms.centery = centerCanvas.y;
+		MotionTrackerDevice.uniformsPing.time+=delta;
+		MotionTrackerDevice.uniformsPing.centerx = centerCanvas.x;
+		MotionTrackerDevice.uniformsPing.centery = centerCanvas.y;
 	}
 
 	setData(user = game.user, tokenId, viewedSceneId)
