@@ -273,7 +273,7 @@ export class MotionTrackerDevice
 		const bSeePlayers = game.settings.get(settings.REGISTER_CODE,'seePlayers');
 		const distanceMax = game.settings.get(settings.REGISTER_CODE,'maxDistance');
 		MotionTrackerDevice.uniformsPing.distmax = distanceMax;
-		const immobileStatuses = [CONFIG.Combat.defeatedStatusId, 'unconscious', 'asleep', 'stunned', 'paralysis']
+		const immobileStatuses = [CONFIG.Combat.defeatedStatusId, 'unconscious', 'sleep', 'stun', 'paralysis', 'restrain', 'prone']
 		const pos = computeTokenCenter(this.tokenReference);
 		let nearestDist = distanceMax;
 		let playerIds = [];
