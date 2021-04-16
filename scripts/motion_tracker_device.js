@@ -270,17 +270,29 @@ export class MotionTrackerDevice
 
 		const scene = game.scenes.get(this.viewedSceneId);
 		const tokens = scene.data.tokens;
-		const seePlayers = game.settings.get(settings.REGISTER_CODE,'seePlayers');
+		const bSeePlayers = game.settings.get(settings.REGISTER_CODE,'seePlayers');
 		const distanceMax = game.settings.get(settings.REGISTER_CODE,'maxDistance');
 		MotionTrackerDevice.uniformsPing.distmax = distanceMax;
 		const immobileStatuses = [CONFIG.Combat.defeatedStatusId, 'unconscious', 'asleep', 'stunned', 'paralysis']
 		const pos = computeTokenCenter(this.tokenReference);
 		let nearestDist = distanceMax;
+		let playerIds = [];
+		for(let i = 0;i<game.users._source.length;++i)
+		{
+			if(game.users._source[i].role<4)
+				playerIds.push(game.users._source[i]._id);
+		}
 		tokens.forEach(token => 
 			{
 				let immobile = token.actorData?.effects?.find(e => immobileStatuses.some(s=>s===e.flags.core.statusId));
-				
-				if(!immobile && token._id!==this.tokenReference._id && !token.hidden)
+				let actor = game.actors.get(token.actorId);
+				let bPlayerControlled = false;
+				for(let i = 0;i < playerIds.length;++i)
+				{
+					bPlayerControlled |= actor.data.permission[playerIds[i]]>2;
+				}
+				let bSkip = bSeePlayers || !bPlayerControlled;
+				if(!immobile && bSkip && token._id!==this.tokenReference._id && !token.hidden)
 				{
 					const oPos = computeTokenCenter(token);
 					oPos.x = (oPos.x-pos.x)/scene.data.grid;
