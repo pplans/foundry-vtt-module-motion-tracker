@@ -4,6 +4,16 @@ A module giving life to the Alien RPG motion tracker in foundry VTT
 The module installs a button just over the chat box that you can hit.
 When hitted, the button will scan for the nearest active and visibles tokens based on the selected token.
 
+## v0.1.3
+* Fixed statuses not properly taken into account
+
+## v0.1.2
+* Added the "see players" setting behavior so that it will work now (sorry I let it there that long without adding the functionality)
+
+## v0.1.1
+* Fixed errors when you first activated the Module in your world
+* Fixed a few masqued errors
+
 ## v0.1
 * Migration Three JS -> PIXIjs taking advantage of the engine already in use inside Foundry VTT
 * Added animations for both signals and background simulating periodic scan
