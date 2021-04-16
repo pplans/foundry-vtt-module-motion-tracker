@@ -1,22 +1,54 @@
 import * as settings from './settings.js';
-import * as dialog from './dialog.js';
 import {MotionTrackerDevice} from './motion_tracker_device.js'
 
 console.log("Motion Tracker Module Loaded");
 
 export function renderMotionTrackerIcon()
 {
-	const lang_html = $(`
-	<a class="chat-control-icon motion_tracker-dialog" title="Run Motion Tracker" style="margin-right: 7px">
-		<i class="fas motion-tracker-ico"></i>
-	</a>
-	`);
-	jQuery("#chat-controls label").before(lang_html);
-	jQuery('a.motion_tracker-dialog').click(() => { game.motion_tracker.toggle({}); });
+	if(game.user.isGM || !game.settings.get(settings.REGISTER_CODE, 'gmOnly'))
+	{
+		const lang_html = $(`
+		<a class="chat-control-icon motion_tracker-dialog-button" title="Run Motion Tracker" style="margin-right: 7px">
+			<i class="fas motion-tracker-ico"></i>
+		</a>
+		`);
+		jQuery("#chat-controls label").before(lang_html);
+		jQuery('a.motion_tracker-dialog-button').click(() => { game.motion_tracker.toggle({}); });
+	}
 }
 
 Hooks.on('init', ()=>
 {
+	// set up the mutation observer
+	let observer = new MutationObserver(function (mutations, me)
+	{
+		// `mutations` is an array of mutations that occurred
+		// `me` is the MutationObserver instance
+		let chatControls = document.getElementById('chat-controls');
+		if (chatControls && game.user)
+		{
+			renderMotionTrackerIcon();
+			if(game.motion_tracker===undefined || game.motion_tracker===null)
+			{
+				game.motion_tracker = new MotionTracker();
+				Hooks.on('renderDialog', (dialog, html, data) => {
+					if(dialog.appId===game.motion_tracker.dialogId)
+					{
+						game.motion_tracker.setupDevice(dialog, html, data);
+					}
+				});
+			}
+			me.disconnect(); // stop observing
+			return;
+		}
+	});
+	
+	// start observing
+	observer.observe(document, {
+	  childList: true,
+	  subtree: true
+	});
+
 	settings.registerSettings((settings)=>
 	{
 		if(game.motion_tracker)
@@ -24,28 +56,28 @@ Hooks.on('init', ()=>
 			game.motion_tracker.resize(settings);
 		}
 	});
-});
 
-Hooks.on('setup', ()=>
-{
-	window.MotionTrackerDialog =
+	// should trigger when installed, but not after
+	/*const user = game.data.users.find(u => u._id===game.data.userId);
+	if(user!==undefined && user.role===4 || !game.settings.get(settings.REGISTER_CODE, 'gmOnly'))
 	{
-		newDialog : dialog.newDialog
-	};
-})
+		console.log("Motion Tracker Module Init");
+		setTimeout(renderMotionTrackerIcon(), 1000);
+	}*/
+});
 
 Hooks.on('ready', ()=>
 {
-	if(game.user.isGM || !game.settings.get(settings.REGISTER_CODE, 'gmOnly'))
-		setTimeout(renderMotionTrackerIcon(), 1000);
+	console.log("Motion Tracker Module 'ready' hook");
 
-	game.motion_tracker = new MotionTracker();
+	/*game.motion_tracker = new MotionTracker();
 	Hooks.on('renderDialog', (dialog, html, data) => {
-		game.motion_tracker.setupDevice(dialog, html, data);
-	});
+		if(dialog.appId===game.motion_tracker.dialogId)
+		{
+			game.motion_tracker.setupDevice(dialog, html, data);
+		}
+	});*/
 });
-
-
 
 /**
  * Main class to handle Motion Tracker Device.
@@ -104,6 +136,7 @@ Hooks.on('ready', ()=>
 	 */
 	constructor()
 	{
+		this.dialogId = -1;
 		this.tokenId = null;
 		this.user = null;
 		this.windowElement = null;
@@ -132,6 +165,7 @@ Hooks.on('ready', ()=>
 			},
 			close: () => { this.close(true, false); }
 		}, {jQuery: true, minimizable: false});
+		this.dialogId = this.window.appId;
 		this.canvas = null;
 		this.currentCanvasPosition = MotionTracker.CONFIG.canvasZIndex;
 		this.currentUseHighDPI = MotionTracker.CONFIG.useHighDPI;
@@ -208,8 +242,9 @@ Hooks.on('ready', ()=>
 	async setupDevice(dialog, html, data)
 	{
 		this.windowElement = dialog.element;
+		html[0].className += ' motion-tracker-dialog';
 		this.canvas = html.find('#motion-tracker-canvas');
-		await this.canvas!==null;
+		await this.canvas!==null && this.canvas!==undefined;
 		const SIZE = game.settings.get(settings.REGISTER_CODE, 'size');
 		let config = MotionTracker.ALL_CONFIG();
 		this.device = new MotionTrackerDevice(this.canvas[0], config);
@@ -276,7 +311,7 @@ Hooks.on('ready', ()=>
 
 	resize(size)
 	{
-		if(this.windowElement && this.canvas)
+		if(this.windowElement!==null && this.windowElement!==undefined && this.canvas!==null && this.canvas!==undefined)
 		{
 			this.canvas[0].style.width  = size+'px';
 			this.canvas[0].style.height = size+'px';
@@ -298,5 +333,6 @@ Hooks.on('ready', ()=>
 			this.close(true);
 		else
 			this.open();
+		return this.device===null;
 	}
     }
