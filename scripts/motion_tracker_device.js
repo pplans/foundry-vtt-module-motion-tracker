@@ -255,7 +255,7 @@ export class MotionTrackerDevice
 
 	update(delta)
 	{
-		if(this.user===null || this.tokenReference===null)
+		if(this.user===null || this.tokenReference===null || this.tokenReference===undefined)
 			return;
 		// wipe precedent signals
 		this.signals.length = 0;
@@ -342,9 +342,12 @@ export class MotionTrackerDevice
 		this.tokenReference = null;
 		this.viewedSceneId = viewedSceneId;
 		const scene = game.scenes.get(this.viewedSceneId);
-		const tokens = scene.data.tokens;
-		if(tokens.length>0)
-			this.tokenReference = tokens.find(tok => tok._id === tokenId);
+		if(scene!==null && scene!==undefined)
+		{
+			const tokens = scene.data.tokens;
+			if(tokens.length>0)
+				this.tokenReference = tokens.find(tok => tok._id === tokenId);
+		}
 	}
 
 	stop()
