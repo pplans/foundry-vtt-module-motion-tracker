@@ -49,11 +49,11 @@ Hooks.on('init', ()=>
 	  subtree: true
 	});
 
-	settings.registerSettings((settings)=>
+	settings.registerSettings((data)=>
 	{
 		if(game.motion_tracker)
 		{
-			game.motion_tracker.resize(settings);
+			game.motion_tracker.resize(data);
 		}
 	});
 
@@ -87,16 +87,19 @@ Hooks.on('ready', ()=>
 	static get DEFAULT_OPTIONS()
 	{
 		return {
-			enabled: true,
-			timeBeforeHide: 2000,
-			hideFX: 'fadeOut',
-			autoscale: true,
-			scale: 75,
-			speed: 1,
+			speed: 0.01,
 			sounds: true,
 			soundsVolume: 0.5,
-			canvasZIndex:'over',
-			useHighDPI:true
+			useHighDPI:true,
+			audio:
+			{
+				muted: false,
+				volume: 1.,
+				wave: {volume: 1., src: 'modules/motion_tracker/sounds/motion_tracker_wave.ogg'},
+				close: {volume: 1., src: 'modules/motion_tracker/sounds/motion_tracker_ping_close.ogg'},
+				medium: {volume: 1., src: 'modules/motion_tracker/sounds/motion_tracker_ping_medium.ogg'},
+				far: {volume: 1., src: 'modules/motion_tracker/sounds/motion_tracker_ping_far.ogg'}
+			}
 		};
 	}
     
@@ -112,7 +115,7 @@ Hooks.on('ready', ()=>
     
 	static get CONFIG()
 	{
-		return MotionTracker.DEFAULT_OPTIONS;
+		return mergeObject(MotionTracker.DEFAULT_OPTIONS, game.settings.get(settings.REGISTER_CODE, 'settings'));
 	}
     
 	static APPEARANCE(user = game.user)
@@ -155,7 +158,15 @@ Hooks.on('ready', ()=>
 	 */
 	_buildWindow()
 	{
-		const htmlContent = `<div id="motion-tracker-canvas" style="position: absolute; left: 0; top: 0;pointer-events: none;"></div>`;
+		let audioMuteIcon = MotionTracker.CONFIG.audio.muted?'motion-tracker-options-unmute-ico':'motion-tracker-options-mute-ico';
+		const htmlContent = `
+		<div id="motion-tracker-options">
+			<i class="motion-tracker-options-toggle motion-tracker-options-open-ico"></i>
+			<div id="motion-tracker-options-content">
+				<i class="motion-tracker-options-mute-toggle ${audioMuteIcon}"></i>
+			</div>
+		</div>
+		<div id="motion-tracker-canvas" style="position: absolute; left: 0; top: 0;pointer-events: none;"></div>`;
 		this.window = new Dialog({
 			title: game.i18n.localize('MOTIONTRACKER.MotionTrackerDialogTitle'),
 			content: htmlContent,
@@ -244,7 +255,40 @@ Hooks.on('ready', ()=>
 		this.windowElement = dialog.element;
 		html[0].className += ' motion-tracker-dialog';
 		this.canvas = html.find('#motion-tracker-canvas');
+		// bind events
+		html.find('.motion-tracker-options-toggle').click(
+			e => {
+				e.preventDefault();
+				let contentElement = html.find('#motion-tracker-options-content');
+				if(contentElement[0].style.display=='none' || contentElement[0].style.display=='')
+				{
+					html.find('.motion-tracker-options-open-ico').addClass('motion-tracker-options-close-ico').removeClass('motion-tracker-options-open-ico');
+					contentElement[0].style.display='block';
+				}
+				else
+				{
+					html.find('.motion-tracker-options-close-ico').addClass('motion-tracker-options-open-ico').removeClass('motion-tracker-options-close-ico');
+					contentElement[0].style.display='none';
+				}
+			});
+		html.find('.motion-tracker-options-mute-toggle').click(
+			e => {
+				e.preventDefault();
+				if(this.device && !this.device.isMuted())
+				{
+					html.find('.motion-tracker-options-mute-ico').addClass('motion-tracker-options-unmute-ico').removeClass('motion-tracker-options-mute-ico');
+					this.device.mute();
+				}
+				else if(this.device)
+				{
+					html.find('.motion-tracker-options-unmute-ico').addClass('motion-tracker-options-mute-ico').removeClass('motion-tracker-options-unmute-ico');
+					this.device.unMute();
+				}
+			});
+
+		// continue
 		await this.canvas!==null && this.canvas!==undefined;
+
 		const SIZE = game.settings.get(settings.REGISTER_CODE, 'size');
 		let config = MotionTracker.ALL_CONFIG();
 		this.device = new MotionTrackerDevice(this.canvas[0], config);
@@ -313,15 +357,16 @@ Hooks.on('ready', ()=>
 	{
 		if(this.windowElement!==null && this.windowElement!==undefined && this.canvas!==null && this.canvas!==undefined)
 		{
-			this.canvas[0].style.width  = size+'px';
-			this.canvas[0].style.height = size+'px';
+			//this.canvas[0].style.width  = size+'px';
+			//this.canvas[0].style.height = size+'px';
 			this.canvas[0].style.position = 'relative';
 			this.windowElement[0].style.width = size+'px';
-			this.windowElement[0].style.height = (size+30)+'px';
+			this.windowElement[0].style.minHeight = size+'px';
+			this.windowElement[0].style.height = 'auto';
 			let title = $(this.windowElement[0]).find('.window-header');
 			title.css('background-color', '#194c99');
 			let content = $(this.windowElement[0]).find('.window-content');
-			content.css('width', size+'px').css('height', size+'px').css('padding', '0');
+			//content.css('width', size+'px').css('height', size+'px').css('padding', '0');
 			if(this.device!==null && this.device!==undefined)
 				this.device.resize(size);
 		}
@@ -335,4 +380,10 @@ Hooks.on('ready', ()=>
 			this.open();
 		return this.device===null;
 	}
-    }
+
+	onSettingsChange(data)
+	{
+		if(this.device!==null)
+			this.device.onSettingsChange(data);
+	}
+}

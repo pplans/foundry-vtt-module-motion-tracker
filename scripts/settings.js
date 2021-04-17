@@ -1,3 +1,5 @@
+import {MotionTracker} from './motion_tracker.js'
+
 export function registerSettings(callbackResize)
 {
   gmOnly_Settings(callbackResize);
@@ -72,4 +74,110 @@ function gmOnly_Settings(callbackResize)
 		    step: 1
 		}
 	});
+
+	game.settings.register(REGISTER_CODE,'defaultMuted',
+	{
+		name : 'MOTIONTRACKER.defaultMutedTitle',
+		hint : 'MOTIONTRACKER.defaultMutedHint',
+		scope :'world',
+		config : true,
+		default: false,
+		type : Boolean
+	});
+
+	game.settings.registerMenu(REGISTER_CODE, 'motion_tracker', {
+	    name: 'MOTIONTRACKER.config',
+	    label: 'MOTIONTRACKER.configTitle',
+	    hint: 'MOTIONTRACKER.configHint',
+	    icon: 'fas motion-tracker-ico',
+	    type: MotionTrackerConfig,
+	    restricted: false
+	});
+
+	game.settings.register(REGISTER_CODE, 'settings', {
+	    name: 'Motion Tracker Settings',
+	    scope: 'world',
+	    default: MotionTracker.DEFAULT_OPTIONS,
+	    type: Object,
+	    config: false
+	});
+}
+
+/**
+ * Form application to configure settings of the Motion Tracker.
+ */
+class MotionTrackerConfig extends FormApplication
+{
+	static get defaultOptions() {
+		return mergeObject(super.defaultOptions,
+		{
+			title: game.i18n.localize("MOTIONTRACKER.configTitle"),
+			id: "motion-tracker-config",
+			template: "modules/motion_tracker/templates/motion_tracker_config.html",
+			width: 500,
+			height: "auto",
+			closeOnSubmit: true,
+			tabs: [{navSelector: ".tabs", contentSelector: "form", initial: "general"}]
+		})
+	}
+
+	getData(options)
+	{
+		let data = mergeObject(MotionTracker.CONFIG, game.settings.get(REGISTER_CODE, 'settings'), { insertKeys: false, insertValues: false });
+		data.audio.mutedChecked = data.audio.muted?'checked':'';
+		return data;
+	}
+
+	activateListeners(html)
+	{
+		super.activateListeners(html);
+		html.find('button[name="reset"]').click(this._onReset.bind(this));
+		html.find('file-picker').click(event =>
+		{
+			event.preventDefault();
+			let target = button.getAttribute('data-target');
+			let fp = FilePicker.fromButton(button);
+			this.filepickers.push({
+				target: target,
+				app: fp
+			});
+			fp.browse();
+		});
+	}
+
+	_onReset(event)
+	{
+		event.preventDefault();
+		game.settings.set(REGISTER_CODE, 'settings', MotionTracker.DEFAULT_OPTIONS);
+	}
+
+	async _updateObject(event, formData)
+	{
+		let data =
+		{
+			audio:
+			{
+				muted: formData['muted'],
+				volume: formData['volume-main'],
+				wave: { volume: formData['volume-wave'], src: formData['path-wave'] },
+				close: { volume: formData['volume-close'], src: formData['path-close'] },
+				medium: { volume: formData['volume-medium'], src: formData['path-medium'] },
+				far: { volume: formData['volume-far'], src: formData['path-far'] }
+			}
+		};
+
+		let settings = mergeObject(MotionTracker.CONFIG, data, { insertKeys: false, insertValues: false });
+
+		if(game.motion_tracker)
+		{
+			game.motion_tracker.onSettingsChange(settings);
+		}
+
+		await game.settings.set(REGISTER_CODE, 'settings', settings);
+	}
+
+	close(options)
+	{
+		super.close(options);
+	}
 }
