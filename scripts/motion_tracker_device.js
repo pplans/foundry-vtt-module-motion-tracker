@@ -116,7 +116,7 @@ export class MotionTrackerDevice
 
 	preloadSounds()
 	{
-		let foundsounds = [];// TODO: 'scanning', 'close','medium','far'];
+		let foundsounds = ['bip'];// TODO: 'scanning', 'close','medium','far'];
 		foundsounds.forEach(v => 
 		{
 			let path = `modules/motion_tracker/sounds/${v}.wav`;
@@ -287,9 +287,12 @@ export class MotionTrackerDevice
 				let immobile = token.actorData?.effects?.find(e => immobileStatuses.some(s=>s===e.flags.core.statusId));
 				let actor = game.actors.get(token.actorId);
 				let bPlayerControlled = false;
-				for(let i = 0;i < playerIds.length;++i)
+				if(actor!==null)
 				{
-					bPlayerControlled |= actor.data.permission[playerIds[i]]>2;
+					for(let i = 0;i < playerIds.length;++i)
+					{
+						bPlayerControlled |= actor.data.permission[playerIds[i]]>2;
+					}
 				}
 				let bSkip = bSeePlayers || !bPlayerControlled;
 				if(!immobile && bSkip && token._id!==this.tokenReference._id && !token.hidden)
