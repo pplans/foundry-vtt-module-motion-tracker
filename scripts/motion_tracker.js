@@ -152,15 +152,17 @@ Hooks.on('ready', ()=>
 			{
 				switch(request.type)
 				{
+					case 'init':
+						if(request.ownerId!==game.user._id && game.user.hasRole(USER_ROLES.ASSISTANT))
+							this.open(request.user, request.ownerId, request.tokenReferenceId, request.viewedSceneId);
+					break;
 					case 'open':
-						if(request.targetId==null || request.targetId==game.user.data._id)
+						if(request.targetId===null || request.targetId===game.user.data._id)
 							this.open(request.user, request.ownerId, request.tokenReferenceId, request.viewedSceneId);
 					break;
 					case 'close':
-						if(request.targetId==null || request.targetId==game.user.data._id)
-							this.close();
-					break;
-					case 'update':
+						if(request.targetId===null || request.targetId===game.user.data._id)
+							this.close(request.srcIsMaster);
 					break;
 				}
 			}
@@ -231,7 +233,7 @@ Hooks.on('ready', ()=>
 	{
 		return new Promise((resolve, reject) =>
 		{
-			this.window.close();
+			this.window.close(game.user.hasRole(USER_ROLES.ASSISTANT));
 			resolve();
 		});
 	}
@@ -354,6 +356,10 @@ class MotionTrackerWindow extends Application
 		this.device = new MotionTrackerDevice(this.canvas, config);
 		this.device.setData(this.user, this.tokenId, this.viewedSceneId);
 
+		if(this.ownerId===game.user.id)
+		{
+			this.sendCommand(null, 'init');
+		}
 		this.sendCommand(game.user.id, 'open', 'notify');
 	}
  
@@ -444,9 +450,10 @@ class MotionTrackerWindow extends Application
 		}
 	}
  
-	close(options)
+	close(srcId, options)
 	{
-		if(this.ownerId==game.user.id || game.user.hasRole(USER_ROLES.ASSISTANT))
+		const owner = game.users.get(this.ownerId);
+		if(this.ownerId===game.user.id || owner!==null && owner!==undefined && !owner.hasRole(USER_ROLES.ASSISTANT) && game.user.hasRole(USER_ROLES.ASSISTANT))
 		{
 			this.sendCommand(null, 'close');
 		}
