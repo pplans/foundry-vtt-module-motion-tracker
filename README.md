@@ -18,6 +18,7 @@ When hitted, the button will scan for the nearest active and visibles tokens bas
 
 ## v0.3.0
 * Added player visibility control
+* A lot of bugs have been fixed among them: not so circular scanning, distance computation
 
 ## v0.2.0
 * Added full audio support
