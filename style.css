@@ -18,6 +18,11 @@
 	padding-right: 5px;
 }
 
+#motion-tracker-options-player-list
+{
+	color: #ffffffbb;
+}
+
 #motion-tracker-window > .window-content
 {
 	padding: 0px;
@@ -42,13 +47,11 @@
 
 #motion-tracker-options
 {
-	/*height: 16px;*/
 	background-color: #194c99;
 }
 
 #motion-tracker-options-content
 {
-	height: 32px;
 	display: none;
 }
 
@@ -98,4 +101,22 @@
 	height: 32px;
 	background: no-repeat url("./textures/motion_tracker_options_unmute_ico.webp");
 	background-size: 32px;
+}
+
+.motion-tracker-hide-ico
+{
+	cursor: pointer;
+	width: 16px;
+	height: 16px;
+	background: no-repeat url("./textures/motion_tracker_visible_ico.webp");
+	background-size: 16px;
+}
+
+.motion-tracker-show-ico
+{
+	cursor: pointer;
+	width: 16px;
+	height: 16px;
+	background: no-repeat url("./textures/motion_tracker_invisible_ico.webp");
+	background-size: 16px;
 }

@@ -39,5 +39,6 @@
 	"MOTIONTRACKER.yOffsetHint": "The motion tracker will be drawn translated with that value in vertical plane (pixels)",
 	"MOTIONTRACKER.MotionTrackerDialogTitle": "Motion Tracker",
 	"MOTIONTRACKER.Reset": "Reset",
-	"MOTIONTRACKER.Save": "Save"
+	"MOTIONTRACKER.Save": "Save",
+	"MOTIONTRACKER.showToAll": "Show to all players"
 }

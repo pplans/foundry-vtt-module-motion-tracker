@@ -144,16 +144,25 @@ Hooks.on('ready', ()=>
 	{
 		game.socket.on('module.motion_tracker', (request) =>
 		{
-			switch(request.type)
+			if(game.user.hasRole(USER_ROLES.ASSISTANT))
 			{
-				case 'open':
-					this.open(request.user, request.ownerId, request.tokenReferenceId, request.viewedSceneId);
-				break;
-				case 'close':
-					this.close();
-				break;
-				case 'update':
-				break;
+				this.window.recvCommand(request.targetId, request.type);
+			}
+			if(request.notify!=='notify')
+			{
+				switch(request.type)
+				{
+					case 'open':
+						if(request.targetId==null || request.targetId==game.user.data._id)
+							this.open(request.user, request.ownerId, request.tokenReferenceId, request.viewedSceneId);
+					break;
+					case 'close':
+						if(request.targetId==null || request.targetId==game.user.data._id)
+							this.close();
+					break;
+					case 'update':
+					break;
+				}
 			}
 		});
 	}
@@ -263,6 +272,7 @@ class MotionTrackerWindow extends Application
 		this.ownerId = null;
 		this.tokenId = null;
 		this.viewedSceneId = null;
+		this.playerVisibility = [];
 	}
 
 	static get defaultOptions()
@@ -292,12 +302,49 @@ class MotionTrackerWindow extends Application
 	 ******************************/
 	async _render(...args)
 	{
+		if(this.rendered)
+			return;
 		// Render the application and restore focus
 		await super._render(...args);
 
 		this.windowElement = this.element[0];
 		this.windowElement.className += ' motion-tracker-dialog';
 		this.canvas = this.element.find('#motion-tracker-canvas')[0];
+
+		// content building
+		if(game.user.hasRole(USER_ROLES.ASSISTANT))
+		{
+			let playerList = this.element.find('#motion-tracker-options-player-list')[0];
+			// all button
+			{
+				let playerItem = document.createElement('div');
+				let playerItemLink = document.createElement('a');
+				let playerItemIco = document.createElement('i');
+				playerItemIco.className='motion-tracker-show';
+				playerItemLink.onclick = e=> { this.sendCommand(null, 'open'); };
+				playerItemLink.appendChild(playerItemIco);
+				playerItemLink.appendChild(document.createTextNode(game.i18n.localize('MOTIONTRACKER.showToAll')));
+				playerItem.appendChild(playerItemLink);
+				playerList.appendChild(playerItem);
+			}
+			// per player button
+			game.users.forEach(u =>
+				{
+					if(!u.isSelf)
+					{
+						let playerItem = document.createElement('div');
+						let playerItemLink = document.createElement('a');
+						let playerItemIco = document.createElement('i');
+						playerItemIco.id = 'motion-tracker-visibility-'+u.data._id;
+						playerItemIco.className='fas '+(this.playerVisibility[u.data._id]==='open'?'motion-tracker-hide-ico':'motion-tracker-show-ico');
+						playerItemLink.onclick = e=> { this.sendCommand(u.data._id, this.playerVisibility[u.data._id]==='open'?'close':'open'); };
+						playerItemLink.appendChild(playerItemIco);
+						playerItemLink.appendChild(document.createTextNode(u.data.name));
+						playerItem.appendChild(playerItemLink);
+						playerList.appendChild(playerItem);
+					}
+				});
+		}
 
 		// style force
 		this.windowElement.style.height = null;
@@ -307,11 +354,7 @@ class MotionTrackerWindow extends Application
 		this.device = new MotionTrackerDevice(this.canvas, config);
 		this.device.setData(this.user, this.tokenId, this.viewedSceneId);
 
-		// notify the guys
-		if (this.ownerId==game.user.id)
-		{
-			game.socket.emit('module.motion_tracker', { type:'open', ownerId: this.ownerId, user: this.user, tokenReferenceId: this.tokenId, viewedSceneId: this.viewedScene });
-		}
+		this.sendCommand(game.user.id, 'open', 'notify');
 	}
  
 	/******************************
@@ -354,6 +397,41 @@ class MotionTrackerWindow extends Application
 		;
 	}
 
+	recvCommand(target, type)
+	{
+		if(target==null)
+		{
+			game.users.forEach(u =>
+			{
+				this.playerVisibility[u.data._id] = type;
+				const classRemoved = type==='open'?'motion-tracker-show-ico':'motion-tracker-hide-ico';
+				const classAdded = type==='open'?'motion-tracker-hide-ico':'motion-tracker-show-ico';
+				this.element.find('#motion-tracker-visibility-'+u.data._id).addClass(classAdded).removeClass(classRemoved);
+			});
+		}
+		else
+		{
+			this.playerVisibility[target] = type;
+			const classRemoved = type==='open'?'motion-tracker-show-ico':'motion-tracker-hide-ico';
+			const classAdded = type==='open'?'motion-tracker-hide-ico':'motion-tracker-show-ico';
+			this.element.find('#motion-tracker-visibility-'+target).addClass(classAdded).removeClass(classRemoved);
+		}
+	}
+
+	sendCommand(target, type, notify=null)
+	{
+		game.socket.emit('module.motion_tracker',
+		{
+			type: type,
+			ownerId: this.ownerId,
+			user: this.user,
+			tokenReferenceId: this.tokenId,
+			viewedSceneId: this.viewedScene,
+			targetId: target,
+			notify: notify
+		});
+	}
+
 	resize(size)
 	{
 		if(this.windowElement!==null && this.windowElement!==undefined && this.canvas!==null && this.canvas!==undefined)
@@ -368,9 +446,13 @@ class MotionTrackerWindow extends Application
  
 	close(options)
 	{
-		if(this.ownerId==game.user.id)
+		if(this.ownerId==game.user.id || game.user.hasRole(USER_ROLES.ASSISTANT))
 		{
-			game.socket.emit('module.motion_tracker', { type:'close' });
+			this.sendCommand(null, 'close');
+		}
+		else
+		{
+			this.sendCommand(game.user.id, 'close', 'notify');
 		}
 		if(this.device)
 		{
