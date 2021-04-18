@@ -419,6 +419,8 @@ class MotionTrackerWindow extends Application
 				{
 					html.find('.motion-tracker-options-close-ico').addClass('motion-tracker-options-open-ico').removeClass('motion-tracker-options-close-ico');
 					contentElement[0].style.display='none';
+					// cancel height
+					this.windowElement.style.height = null;
 				}
 			}
 		);
