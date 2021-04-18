@@ -23,6 +23,12 @@
 	color: #ffffffbb;
 }
 
+.motion-tracker-owner
+{
+	font-weight: bold;
+	text-decoration: underline;
+}
+
 #motion-tracker-window > .window-content
 {
 	padding: 0px;
@@ -110,6 +116,7 @@
 	height: 16px;
 	background: no-repeat url("./textures/motion_tracker_visible_ico.webp");
 	background-size: 16px;
+	margin-right: 5px;
 }
 
 .motion-tracker-show-ico
@@ -119,4 +126,5 @@
 	height: 16px;
 	background: no-repeat url("./textures/motion_tracker_invisible_ico.webp");
 	background-size: 16px;
+	margin-right: 5px;
 }

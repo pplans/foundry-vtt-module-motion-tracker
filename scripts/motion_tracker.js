@@ -339,6 +339,11 @@ class MotionTrackerWindow extends Application
 						let playerItemIco = document.createElement('i');
 						playerItemIco.id = 'motion-tracker-visibility-'+u.data._id;
 						playerItemIco.className='fas '+(this.playerVisibility[u.data._id]==='open'?'motion-tracker-hide-ico':'motion-tracker-show-ico');
+						if(u.data._id==this.ownerId)
+						{
+							playerItemLink.className += 'motion-tracker-owner';
+							playerItemLink.style.color = u.data.color;
+						}
 						playerItemLink.onclick = e=> { this.sendCommand(u.data._id, this.playerVisibility[u.data._id]==='open'?'close':'open'); };
 						playerItemLink.appendChild(playerItemIco);
 						playerItemLink.appendChild(document.createTextNode(u.data.name));
