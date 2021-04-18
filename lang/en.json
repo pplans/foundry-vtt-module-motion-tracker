@@ -13,6 +13,7 @@
 	"MOTIONTRACKER.centerTrackerTitle": "Center Motion Tracker?",
 	"MOTIONTRACKER.centerTrackerHint": "The motion tracker will be drawn in the middle of the screen over anything else",
 	"MOTIONTRACKER.settingsGeneral": "General",
+	"MOTIONTRACKER.scanSpeed": "Tracking animation speed",
 	"MOTIONTRACKER.settingsAudio": "Audio",
 	"MOTIONTRACKER.defaultMutedTitle": "Mute by default?",
 	"MOTIONTRACKER.defaultMutedHint": "Will default mute the Motion Tracker, so that there will be no sound at all until activated",

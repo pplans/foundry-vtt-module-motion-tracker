@@ -73,10 +73,13 @@ Hooks.on('updatePlayer', () =>
 	static get DEFAULT_OPTIONS()
 	{
 		return {
-			speed: 0.01,
 			sounds: true,
 			soundsVolume: 0.5,
 			useHighDPI:true,
+			general:
+			{
+				speed: MotionTrackerDevice.TRACK_SPEED
+			},
 			audio:
 			{
 				muted: false,
@@ -481,6 +484,14 @@ class MotionTrackerWindow extends Application
 			const classRemoved = type==='open'?'motion-tracker-show-ico':'motion-tracker-hide-ico';
 			const classAdded = type==='open'?'motion-tracker-hide-ico':'motion-tracker-show-ico';
 			this.element.find('#motion-tracker-visibility-'+request.targetId).addClass(classAdded).removeClass(classRemoved);
+		}
+		if(request.senderId!==null || request.senderId!==undefined)
+		{
+			let type = request.type;
+			this.playerVisibility[request.senderId] = type;
+			const classRemoved = type==='open'?'motion-tracker-show-ico':'motion-tracker-hide-ico';
+			const classAdded = type==='open'?'motion-tracker-hide-ico':'motion-tracker-show-ico';
+			this.element.find('#motion-tracker-visibility-'+request.senderId).addClass(classAdded).removeClass(classRemoved);
 		}
 	}
 

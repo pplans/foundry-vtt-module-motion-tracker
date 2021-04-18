@@ -5,6 +5,13 @@
     </nav>
     <section id="config-tabs" class="content">
         <div class="tab active" data-tab="general">
+            <div class="form-group">
+                <label>{{localize "MOTIONTRACKER.scanSpeed"}}</label>
+                <div class="form-fields">
+                    <input type="range" name="scan-speed" data-dtype="Number" value="{{general.speed}}" min="0.001" max="0.011" step="0.001">
+                    <span class="range-value">{{general.speed}}</span>
+                </div>
+            </div>
         </div>
         <div class="tab" data-tab="audio">
             <div class="form-group">

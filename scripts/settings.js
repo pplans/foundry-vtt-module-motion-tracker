@@ -155,6 +155,10 @@ class MotionTrackerConfig extends FormApplication
 	{
 		let data =
 		{
+			general:
+			{
+				speed: formData['scan-speed']
+			},
 			audio:
 			{
 				muted: formData['muted'],
