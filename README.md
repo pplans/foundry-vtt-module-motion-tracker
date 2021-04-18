@@ -4,6 +4,12 @@ A module giving life to the Alien RPG motion tracker in foundry VTT
 The module installs a button just over the chat box that you can hit.
 When hitted, the button will scan for the nearest active and visibles tokens based on the selected token.
 
+## v0.2.0
+* Added full audio support
+
+## v0.1.4
+* Fixed a crash when you removed an actor and still had tokens in the scene
+
 ## v0.1.3
 * Fixed statuses not properly taken into account
 
