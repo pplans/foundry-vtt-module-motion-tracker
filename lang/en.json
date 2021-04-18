@@ -29,6 +29,8 @@
 	"MOTIONTRACKER.farSoundVolume": "Far distance sound volume",
 	"MOTIONTRACKER.farSoundTitle": "Far range sound",
 	"MOTIONTRACKER.farSoundHint": "Sound triggered when the nearest moving object is far (try to use 1sec recording)",
+	"MOTIONTRACKER.SettingsConfirmTitle": "Are you sure ?",
+	"MOTIONTRACKER.SettingsConfirmContent": "You are about to reset all these settings and set them as DEFAULT. Consider all customizations will be lost.",
 	"MOTIONTRACKER.sizeTitle": "Size",
 	"MOTIONTRACKER.sizeHint": "The motion tracker size (pixels)",
 	"MOTIONTRACKER.xOffsetTitle": "Motion Tracker offset in horizontal Axis",

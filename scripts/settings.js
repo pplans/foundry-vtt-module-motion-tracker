@@ -138,7 +138,17 @@ class MotionTrackerConfig extends FormApplication
 	_onReset(event)
 	{
 		event.preventDefault();
-		game.settings.set(REGISTER_CODE, 'settings', MotionTracker.DEFAULT_OPTIONS);
+		Dialog.confirm({
+			title: game.i18n.localize('MOTIONTRACKER.SettingsConfirmTitle'),
+			content: `<p>${game.i18n.localize('MOTIONTRACKER.SettingsConfirmContent')}</p>`,
+			yes: () => 
+			{
+				game.settings.set(REGISTER_CODE, 'settings', MotionTracker.DEFAULT_OPTIONS);
+				this.render();
+			},
+			no: () => {},
+			defaultYes: false
+		       });
 	}
 
 	async _updateObject(event, formData)
