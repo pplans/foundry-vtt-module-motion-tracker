@@ -351,6 +351,12 @@ class MotionTrackerWindow extends Application
 						playerItemLink.className += 'motion-tracker-owner';
 						playerItemLink.style.color = u.data.color;
 					}
+					if(!u.active)
+					{
+						playerItemLink.className = '';
+						playerItemLink.style.color = '#888888';
+						playerItemLink.style.textDecoration = 'line-through';
+					}
 					playerItemLink.onclick = e=> { this.sendCommand(u.data._id, this.playerVisibility[u.data._id]==='open'?'close':'open'); };
 					playerItemLink.appendChild(playerItemIco);
 					playerItemLink.appendChild(document.createTextNode(u.data.name));

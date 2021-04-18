@@ -4,6 +4,19 @@ A module giving life to the Alien RPG motion tracker in foundry VTT
 The module installs a button just over the chat box that you can hit.
 When hitted, the button will scan for the nearest active and visibles tokens based on the selected token.
 
+## Player visibility control
+* In the window I added options to control visibility, just click on the arrow
+* Assitants and GMs can control who sees the Motion Tracker, GM has priority over Assistants
+* When players hit the Motion Tracker button, Assistants & GMs are notified opening automatically the MTs window
+* Opening the MTs does not automatically trigger the visibility for every player as before, so be aware of that
+
+## Audio
+* Audio is supported now, it uses 4 clips of 1 second
+* All clips are configurable through the module options
+
+## v0.3.0
+* Added player visibility control
+
 ## v0.2.0
 * Added full audio support
 
