@@ -57,6 +57,14 @@ Hooks.on('ready', ()=>
 	console.log("Motion Tracker Module 'ready' hook");
 });
 
+Hooks.on('updatePlayer', () =>
+{
+	if(game.motion_tracker)
+	{
+		game.motion_tracker._onPlayerUpdate();
+	}
+});
+
 /**
  * Main class to handle Motion Tracker Device.
  */
@@ -146,23 +154,25 @@ Hooks.on('ready', ()=>
 		{
 			if(game.user.hasRole(USER_ROLES.ASSISTANT))
 			{
-				this.window.recvCommand(request.targetId, request.type);
+				this.window.recvCommand(request);
 			}
-			if(request.notify!=='notify')
+			if(request.notify!=='notify' && request.senderId!==game.user.data._id)
 			{
 				switch(request.type)
 				{
 					case 'init':
-						if(request.ownerId!==game.user._id && game.user.hasRole(USER_ROLES.ASSISTANT))
+						const owner = game.users.get(request.ownerId);
+						if(request.ownerId!==game.user.data._id && owner.data.role<game.user.role && game.user.hasRole(USER_ROLES.ASSISTANT))
 							this.open(request.user, request.ownerId, request.tokenReferenceId, request.viewedSceneId);
 					break;
 					case 'open':
-						if(request.targetId===null || request.targetId===game.user.data._id)
+						if((request.targetId===null || request.targetId===game.user.data._id))
 							this.open(request.user, request.ownerId, request.tokenReferenceId, request.viewedSceneId);
 					break;
 					case 'close':
-						if(request.targetId===null || request.targetId===game.user.data._id)
-							this.close(request.srcIsMaster);
+						const sender = game.users.get(request.senderId);
+						if((request.targetId===null || request.targetId===game.user.data._id) && sender.data.role>=game.user.role)
+							this.closeAndNotify();
 					break;
 				}
 			}
@@ -208,7 +218,14 @@ Hooks.on('ready', ()=>
 	{
 		this.window.update(settings);
 	}
-    
+
+	_onPlayerUpdate()
+	{
+		if(this.window)
+		{
+			this.window._onPlayerUpdate();
+		}
+	}    
 	/**
 	 * Show the motion tracker animation based on data configuration made by the User.
 	 *
@@ -231,11 +248,12 @@ Hooks.on('ready', ()=>
 	}
 	close()
 	{
-		return new Promise((resolve, reject) =>
-		{
-			this.window.close(game.user.hasRole(USER_ROLES.ASSISTANT));
-			resolve();
-		});
+		this.window.close();
+	}
+
+	closeAndNotify()
+	{
+		this.window.closeAndNotify();
 	}
 
 	resize(size)
@@ -247,7 +265,7 @@ Hooks.on('ready', ()=>
 	toggle()
 	{
 		if(this.window.rendered)
-			this.close(true);
+			this.close(game.user.data._id);
 		else
 			this.open();
 		return this.window.rendered===null;
@@ -299,6 +317,50 @@ class MotionTrackerWindow extends Application
 		return data;
 	}
 
+	renderPlayerList()
+	{
+		if(game.user.hasRole(USER_ROLES.ASSISTANT))
+		{
+			let jqPlayerList = this.element.find('#motion-tracker-options-player-list');
+			jqPlayerList.empty();
+			let playerList = jqPlayerList[0];
+			// all button
+			{
+				let playerItem = document.createElement('div');
+				let playerItemLink = document.createElement('a');
+				let playerItemIco = document.createElement('i');
+				playerItemIco.className='motion-tracker-show';
+				playerItemLink.onclick = e=> { this.sendCommand(null, 'open'); };
+				playerItemLink.appendChild(playerItemIco);
+				playerItemLink.appendChild(document.createTextNode(game.i18n.localize('MOTIONTRACKER.showToAll')));
+				playerItem.appendChild(playerItemLink);
+				playerList.appendChild(playerItem);
+			}
+			// per player button
+			game.users.forEach(u =>
+			{
+				if(!u.isSelf)
+				{
+					let playerItem = document.createElement('div');
+					let playerItemLink = document.createElement('a');
+					let playerItemIco = document.createElement('i');
+					playerItemIco.id = 'motion-tracker-visibility-'+u.data._id;
+					playerItemIco.className='fas '+(this.playerVisibility[u.data._id]==='open'?'motion-tracker-hide-ico':'motion-tracker-show-ico');
+					if(u.data._id==this.ownerId)
+					{
+						playerItemLink.className += 'motion-tracker-owner';
+						playerItemLink.style.color = u.data.color;
+					}
+					playerItemLink.onclick = e=> { this.sendCommand(u.data._id, this.playerVisibility[u.data._id]==='open'?'close':'open'); };
+					playerItemLink.appendChild(playerItemIco);
+					playerItemLink.appendChild(document.createTextNode(u.data.name));
+					playerItem.appendChild(playerItemLink);
+					playerList.appendChild(playerItem);
+				}
+			});
+		}
+	}
+
 	/******************************
 	 * @override
 	 ******************************/
@@ -314,44 +376,7 @@ class MotionTrackerWindow extends Application
 		this.canvas = this.element.find('#motion-tracker-canvas')[0];
 
 		// content building
-		if(game.user.hasRole(USER_ROLES.ASSISTANT))
-		{
-			let playerList = this.element.find('#motion-tracker-options-player-list')[0];
-			// all button
-			{
-				let playerItem = document.createElement('div');
-				let playerItemLink = document.createElement('a');
-				let playerItemIco = document.createElement('i');
-				playerItemIco.className='motion-tracker-show';
-				playerItemLink.onclick = e=> { this.sendCommand(null, 'open'); };
-				playerItemLink.appendChild(playerItemIco);
-				playerItemLink.appendChild(document.createTextNode(game.i18n.localize('MOTIONTRACKER.showToAll')));
-				playerItem.appendChild(playerItemLink);
-				playerList.appendChild(playerItem);
-			}
-			// per player button
-			game.users.forEach(u =>
-				{
-					if(!u.isSelf)
-					{
-						let playerItem = document.createElement('div');
-						let playerItemLink = document.createElement('a');
-						let playerItemIco = document.createElement('i');
-						playerItemIco.id = 'motion-tracker-visibility-'+u.data._id;
-						playerItemIco.className='fas '+(this.playerVisibility[u.data._id]==='open'?'motion-tracker-hide-ico':'motion-tracker-show-ico');
-						if(u.data._id==this.ownerId)
-						{
-							playerItemLink.className += 'motion-tracker-owner';
-							playerItemLink.style.color = u.data.color;
-						}
-						playerItemLink.onclick = e=> { this.sendCommand(u.data._id, this.playerVisibility[u.data._id]==='open'?'close':'open'); };
-						playerItemLink.appendChild(playerItemIco);
-						playerItemLink.appendChild(document.createTextNode(u.data.name));
-						playerItem.appendChild(playerItemLink);
-						playerList.appendChild(playerItem);
-					}
-				});
-		}
+		this.renderPlayerList();
 
 		// style force
 		this.windowElement.style.height = null;
@@ -361,11 +386,11 @@ class MotionTrackerWindow extends Application
 		this.device = new MotionTrackerDevice(this.canvas, config);
 		this.device.setData(this.user, this.tokenId, this.viewedSceneId);
 
-		if(this.ownerId===game.user.id)
+		if(this.ownerId===game.user.data._id)
 		{
 			this.sendCommand(null, 'init');
 		}
-		this.sendCommand(game.user.id, 'open', 'notify');
+		this.sendCommand(game.user.data._id, 'open', 'notify');
 	}
  
 	/******************************
@@ -408,24 +433,46 @@ class MotionTrackerWindow extends Application
 		;
 	}
 
-	recvCommand(target, type)
+	_onPlayerUpdate()
 	{
-		if(target==null)
+		if(this.rendered)
+			this.renderPlayerList();
+	}
+
+	recvCommand(request)
+	{
+		if(request.targetId==null)
 		{
 			game.users.forEach(u =>
 			{
-				this.playerVisibility[u.data._id] = type;
-				const classRemoved = type==='open'?'motion-tracker-show-ico':'motion-tracker-hide-ico';
-				const classAdded = type==='open'?'motion-tracker-hide-ico':'motion-tracker-show-ico';
-				this.element.find('#motion-tracker-visibility-'+u.data._id).addClass(classAdded).removeClass(classRemoved);
+				if(u.active)
+				{
+					let type = request.type;
+					if(type==='init' && u.hasRole(USER_ROLES.ASSISTANT))
+						type='open';
+					else if(type==='init')
+						type = 'close';
+					this.playerVisibility[u.data._id] = type;
+					const classRemoved = type==='open'?'motion-tracker-show-ico':'motion-tracker-hide-ico';
+					const classAdded = type==='open'?'motion-tracker-hide-ico':'motion-tracker-show-ico';
+					this.element.find('#motion-tracker-visibility-'+u.data._id).addClass(classAdded).removeClass(classRemoved);
+				}
+				else
+				{
+					this.playerVisibility[u.data._id] = 'close';
+					const classRemoved = 'motion-tracker-hide-ico';
+					const classAdded = 'motion-tracker-show-ico';
+					this.element.find('#motion-tracker-visibility-'+u.data._id).addClass(classAdded).removeClass(classRemoved);
+				}
 			});
 		}
 		else
 		{
-			this.playerVisibility[target] = type;
+			let type = request.type;
+			this.playerVisibility[request.targetId] = type;
 			const classRemoved = type==='open'?'motion-tracker-show-ico':'motion-tracker-hide-ico';
 			const classAdded = type==='open'?'motion-tracker-hide-ico':'motion-tracker-show-ico';
-			this.element.find('#motion-tracker-visibility-'+target).addClass(classAdded).removeClass(classRemoved);
+			this.element.find('#motion-tracker-visibility-'+request.targetId).addClass(classAdded).removeClass(classRemoved);
 		}
 	}
 
@@ -439,6 +486,7 @@ class MotionTrackerWindow extends Application
 			tokenReferenceId: this.tokenId,
 			viewedSceneId: this.viewedScene,
 			targetId: target,
+			senderId: game.user.data._id,
 			notify: notify
 		});
 	}
@@ -454,11 +502,27 @@ class MotionTrackerWindow extends Application
 				this.device.resize(size);
 		}
 	}
+	closeDevice()
+	{
+		if(this.device)
+		{
+			this.device.stop();
+			delete this.device;
+			this.device = null;
+		}
+	}
  
-	close(srcId, options)
+	closeAndNotify(options)
+	{
+		this.sendCommand(game.user.id, 'close', 'notify');
+		this.closeDevice();
+		return super.close(options);
+	}
+ 
+	close(options)
 	{
 		const owner = game.users.get(this.ownerId);
-		if(this.ownerId===game.user.id || owner!==null && owner!==undefined && !owner.hasRole(USER_ROLES.ASSISTANT) && game.user.hasRole(USER_ROLES.ASSISTANT))
+		if(this.ownerId===game.user.data._id || owner.data.role<game.user.role && game.user.hasRole(USER_ROLES.ASSISTANT))
 		{
 			this.sendCommand(null, 'close');
 		}
@@ -466,12 +530,7 @@ class MotionTrackerWindow extends Application
 		{
 			this.sendCommand(game.user.id, 'close', 'notify');
 		}
-		if(this.device)
-		{
-			this.device.stop();
-			delete this.device;
-			this.device = null;
-		}
+		this.closeDevice();
 		return super.close(options);
 	}
 

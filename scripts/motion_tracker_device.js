@@ -410,6 +410,7 @@ export class MotionTrackerDevice
 
 	stop()
 	{
+		this.pixi.app.ticker.remove(this.update, this);
 		this.pixi.app.ticker.stop();
 		this.pixi.app.ticker.destroy();
 		this.sound_wave = null;
