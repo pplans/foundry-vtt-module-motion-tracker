@@ -66,8 +66,9 @@ export class MotionTrackerDevice
 			gl_FragColor = s*texture2D(uSampler, vTextureCoord).rrrr;\
 		}';
 	// END SHADER BLOCK
-	static uniformsBackground = {time: 0., speed: 0.01, centerx: 0., centery: 0., uSampler: null};
-	static uniformsPing = {time: 0., speed: 0.01, centerx: 0., centery: 0., distmax: 0.};
+	static TRACK_SPEED = 0.01;
+	static uniformsBackground = {time: 0., speed: MotionTrackerDevice.TRACK_SPEED, centerx: 0., centery: 0., uSampler: null};
+	static uniformsPing = {time: 0., speed: MotionTrackerDevice.TRACK_SPEED, centerx: 0., centery: 0., distmax: 0.};
 
 	static SCREEN_ADDITIONAL_TEXEL_HEIGHT = 64;
 	static SCREEN_ADDITIONAL_CANVAS_HEIGHT = 64./1024;
@@ -95,6 +96,10 @@ export class MotionTrackerDevice
 		this.distUnitPerPx = (1.-MotionTrackerDevice.BACKGROUND_MT_PADDING_SCALE_TOTAL)*settings.MAX_SIZE*.5/distanceMax;
 
 		this.soundBank = {};
+		this.sound_wave = null;
+		const conf = game.settings.get(settings.REGISTER_CODE,'settings');
+		this.volume = conf.audio.volume;
+		this.bMute = conf.audio.muted;
 		// Renderer specific
 		this.pixi = {
 			app: null,
@@ -116,10 +121,11 @@ export class MotionTrackerDevice
 
 	preloadSounds()
 	{
-		let foundsounds = [];// TODO: 'scanning', 'close','medium','far'];
+		let settingsData = game.settings.get(settings.REGISTER_CODE, 'settings');
+		let foundsounds = [settingsData.audio.wave.src, settingsData.audio.close.src, settingsData.audio.medium.src, settingsData.audio.far.src];
 		foundsounds.forEach(v => 
 		{
-			let path = `modules/motion_tracker/sounds/${v}.wav`;
+			let path = v;
 			AudioHelper.play({
 				src: path,
 				autoplay: false
@@ -224,6 +230,8 @@ export class MotionTrackerDevice
 		this.pixi.distanceMessage.anchor.set(0.5, 0.5);
 		this.pixi.app.stage.addChild(this.pixi.distanceMessage);
 		this.pixi.app.ticker.add(this.update, this);
+		//this.sound_wave = setInterval(() => this.playSound(['modules/motion_tracker/sounds/motion_tracker_wave.wav', 1.]), 100000.*MotionTrackerDevice.TRACK_SPEED);
+		this.preloadSounds();
 	}
 
 	async reset()
@@ -242,15 +250,6 @@ export class MotionTrackerDevice
 			this.pixi.app.renderer.autoDensity = true;
 			this.pixi.app.renderer.resize(size, size+MotionTrackerDevice.SCREEN_ADDITIONAL_CANVAS_HEIGHT);
 		}
-	}
-
-	playSound(sound)
-	{
-		let volume = sound[1] * this.volume;
-		AudioHelper.play({
-			src: sound[0],
-			volume: volume
-		}, false);
 	}
 
 	update(delta)
@@ -287,9 +286,12 @@ export class MotionTrackerDevice
 				let immobile = token.actorData?.effects?.find(e => immobileStatuses.some(s=>s===e.flags.core.statusId));
 				let actor = game.actors.get(token.actorId);
 				let bPlayerControlled = false;
-				for(let i = 0;i < playerIds.length;++i)
+				if(actor!==null)
 				{
-					bPlayerControlled |= actor.data.permission[playerIds[i]]>2;
+					for(let i = 0;i < playerIds.length;++i)
+					{
+						bPlayerControlled |= actor.data.permission[playerIds[i]]>2;
+					}
 				}
 				let bSkip = bSeePlayers || !bPlayerControlled;
 				if(!immobile && bSkip && token._id!==this.tokenReference._id && !token.hidden)
@@ -329,6 +331,35 @@ export class MotionTrackerDevice
 			Math.floor(.5*(Math.ceil(3.*x)-1.))
 		);
 
+		// deplay sounds by 0.1
+		if(!this.bMute)
+		{
+			let settingsData = game.settings.get(settings.REGISTER_CODE, 'settings');
+			if(x>0.1 && x<0.2 && this.sound_wave===null)
+			{
+				this.sound_wave = AudioHelper.play({src: settingsData.audio.wave.src, volume: settingsData.audio.wave.volume*this.volume}, false);
+			}
+			else if(x>0.2)
+			{
+				this.sound_wave = null;
+			}
+			if(x*distanceMax>nearestDist && this.sound_ping===null)
+			{
+				let sound = settingsData.audio.far;
+				if(nearestDist<0.33*distanceMax)
+					sound = settingsData.audio.close;
+				else if(nearestDist<0.66*distanceMax)
+					sound = settingsData.audio.medium;
+				else
+					sound = settingsData.audio.far;
+				this.sound_ping = AudioHelper.play({src: sound.src, volume: sound.volume*this.volume}, false);
+			}
+			else if(x*distanceMax<nearestDist)
+			{
+				this.sound_ping = null;
+			}
+		}
+
 		if(x*distanceMax>nearestDist)
 		{
 			this.pixi.distanceMessage.text = nearestDist.toFixed(2)+scene.data.gridUnits;
@@ -362,9 +393,32 @@ export class MotionTrackerDevice
 		}
 	}
 
+	isMuted()
+	{
+		return this.bMute;
+	}
+
+	mute()
+	{
+		this.bMute = true;
+	}
+
+	unMute()
+	{
+		this.bMute = false;
+	}
+
 	stop()
 	{
 		this.pixi.app.ticker.stop();
 		this.pixi.app.ticker.destroy();
+		this.sound_wave = null;
+		this.sound_ping = null;
+		//clearInterval(this.sound_wave);
+	}
+
+	onSettingsChange(data)
+	{
+		this.volume = data.audio.volume;
 	}
 }

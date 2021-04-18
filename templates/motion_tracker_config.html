@@ -1,0 +1,106 @@
+<form autocomplete="off" class="dice-so-nice flexcol">
+    <nav class="sheet-tabs tabs">
+        <a class="item active" data-tab="general"><i class="fas motion-tracker-ico"></i> {{localize "MOTIONTRACKER.settingsGeneral"}}</a>
+        <a class="item" data-tab="audio"><i class="fas motion-tracker-options-unmute-32px-ico"></i> {{localize "MOTIONTRACKER.settingsAudio"}}</a>
+    </nav>
+    <section id="config-tabs" class="content">
+        <div class="tab active" data-tab="general">
+        </div>
+        <div class="tab" data-tab="audio">
+            <div class="form-group">
+                <label>{{localize "MOTIONTRACKER.defaultMutedTitle"}}</label>
+                <div class="form-fields">
+                    <input type="checkbox" name="muted" data-dtype="Number" {{audio.mutedChecked}}>
+                </div>
+                <p class="notes">{{localize "MOTIONTRACKER.defaultMutedHint"}}</p>
+            </div>
+            <div class="form-group">
+                <label>{{localize "MOTIONTRACKER.globalVolume"}}</label>
+                <div class="form-fields">
+                    <input type="range" name="volume-main" data-dtype="Number" value="{{audio.volume}}" min="0" max="1" step="0.01">
+                    <span class="range-value">{{audio.volume}}</span>
+                </div>
+            </div>
+            <hr/>
+            <div class="form-group">
+                <label>{{localize "MOTIONTRACKER.waveSoundVolume"}}</label>
+                <div class="form-fields">
+                    <input type="range" name="volume-wave" data-dtype="Number" value="{{audio.wave.volume}}" min="0" max="1" step="0.01">
+                    <span class="range-value">{{audio.wave.volume}}</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{localize "MOTIONTRACKER.waveSoundTitle"}}</label>
+                <div class="form-fields">
+                    <input class="image" type="text" name="path-wave" placeholder="path/audio.mp3" value="{{audio.wave.src}}">
+                    <button type="button" class="file-picker" data-type="audio" data-target="path-wave" title="Browse Files" tabindex="-1">
+                        <i class="fas fa-file-import fa-fw"></i>
+                    </button>
+                </div>
+                <p class="notes">{{localize "MOTIONTRACKER.waveSoundHint"}}</p>
+            </div>
+            <hr/>
+            <div class="form-group">
+                <label>{{localize "MOTIONTRACKER.closeSoundVolume"}}</label>
+                <div class="form-fields">
+                    <input type="range" name="volume-close" data-dtype="Number" data-target="volume-close" value="{{audio.close.volume}}" min="0" max="1" step="0.01">
+                    <span class="range-value">{{audio.close.volume}}</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{localize "MOTIONTRACKER.closeSoundTitle"}}</label>
+                <div class="form-fields">
+                    <input class="image" type="text" name="path-close" placeholder="path/audio.mp3" value="{{audio.close.src}}">
+                    <button type="button" class="file-picker" data-type="audio" data-target="path-close" title="Browse Files" tabindex="-1">
+                        <i class="fas fa-file-import fa-fw"></i>
+                    </button>
+                </div>
+                <p class="notes">{{localize "MOTIONTRACKER.closeSoundHint"}}</p>
+            </div>
+            <hr/>
+            <div class="form-group">
+                <label>{{localize "MOTIONTRACKER.mediumSoundVolume"}}</label>
+                <div class="form-fields">
+                    <input type="range" name="volume-medium" data-dtype="Number" data-target="volume-medium" value="{{audio.medium.volume}}" min="0" max="1" step="0.01">
+                    <span class="range-value">{{audio.medium.volume}}</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{localize "MOTIONTRACKER.mediumSoundTitle"}}</label>
+                <div class="form-fields">
+                    <input class="image" type="text" name="path-medium" placeholder="path/audio.mp3" value="{{audio.medium.src}}">
+                    <button type="button" class="file-picker" data-type="audio" data-target="path-medium" title="Browse Files" tabindex="-1">
+                        <i class="fas fa-file-import fa-fw"></i>
+                    </button>
+                </div>
+                <p class="notes">{{localize "MOTIONTRACKER.mediumSoundHint"}}</p>
+            </div>
+            <hr/>
+            <div class="form-group">
+                <label>{{localize "MOTIONTRACKER.farSoundVolume"}}</label>
+                <div class="form-fields">
+                    <input type="range" name="volume-far" data-dtype="Number" data-target="volume-far" value="{{audio.far.volume}}" min="0" max="1" step="0.01">
+                    <span class="range-value">{{audio.far.volume}}</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{localize "MOTIONTRACKER.farSoundTitle"}}</label>
+                <div class="form-fields">
+                    <input class="image" type="text" name="path-far" placeholder="path/audio.mp3" value="{{audio.far.src}}">
+                    <button type="button" class="file-picker" data-type="audio" data-target="path-far" title="Browse Files" tabindex="-1">
+                        <i class="fas fa-file-import fa-fw"></i>
+                    </button>
+                </div>
+                <p class="notes">{{localize "MOTIONTRACKER.farSoundHint"}}</p>
+            </div>
+        </div>
+    </section>
+    <footer class="sheet-footer flexrow">
+        <button type="submit" name="submit">
+            <i class="fas fa-save"></i> {{localize "MOTIONTRACKER.Save"}}
+        </button>
+        <button type="button" name="reset">
+            <i class="fas fa-refresh"></i> {{localize "MOTIONTRACKER.Reset"}}
+        </button>
+    </footer>
+</form>
