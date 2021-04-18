@@ -31,12 +31,6 @@ Hooks.on('init', ()=>
 			if(game.motion_tracker===undefined || game.motion_tracker===null)
 			{
 				game.motion_tracker = new MotionTracker();
-				Hooks.on('renderDialog', (dialog, html, data) => {
-					if(dialog.appId===game.motion_tracker.dialogId)
-					{
-						game.motion_tracker.setupDevice(dialog, html, data);
-					}
-				});
 			}
 			me.disconnect(); // stop observing
 			return;
@@ -56,27 +50,11 @@ Hooks.on('init', ()=>
 			game.motion_tracker.resize(data);
 		}
 	});
-
-	// should trigger when installed, but not after
-	/*const user = game.data.users.find(u => u._id===game.data.userId);
-	if(user!==undefined && user.role===4 || !game.settings.get(settings.REGISTER_CODE, 'gmOnly'))
-	{
-		console.log("Motion Tracker Module Init");
-		setTimeout(renderMotionTrackerIcon(), 1000);
-	}*/
 });
 
 Hooks.on('ready', ()=>
 {
 	console.log("Motion Tracker Module 'ready' hook");
-
-	/*game.motion_tracker = new MotionTracker();
-	Hooks.on('renderDialog', (dialog, html, data) => {
-		if(dialog.appId===game.motion_tracker.dialogId)
-		{
-			game.motion_tracker.setupDevice(dialog, html, data);
-		}
-	});*/
 });
 
 /**
@@ -139,13 +117,7 @@ Hooks.on('ready', ()=>
 	 */
 	constructor()
 	{
-		this.dialogId = -1;
-		this.tokenId = null;
-		this.user = null;
-		this.windowElement = null;
-		this.device = null;
-		this.ownerId = "";
-		this.viewedSceneId = "";
+		this.window = null;
 		this._buildWindow();
 		this._initListeners();
 		this._welcomeMessage();
@@ -158,26 +130,7 @@ Hooks.on('ready', ()=>
 	 */
 	_buildWindow()
 	{
-		let audioMuteIcon = MotionTracker.CONFIG.audio.muted?'motion-tracker-options-unmute-ico':'motion-tracker-options-mute-ico';
-		const htmlContent = `
-		<div id="motion-tracker-options">
-			<i class="motion-tracker-options-toggle motion-tracker-options-open-ico"></i>
-			<div id="motion-tracker-options-content">
-				<i class="motion-tracker-options-mute-toggle ${audioMuteIcon}"></i>
-			</div>
-		</div>
-		<div id="motion-tracker-canvas" style="position: absolute; left: 0; top: 0;pointer-events: none;"></div>`;
-		this.window = new Dialog({
-			title: game.i18n.localize('MOTIONTRACKER.MotionTrackerDialogTitle'),
-			content: htmlContent,
-			buttons:
-			{
-
-			},
-			close: () => { this.close(true, false); }
-		}, {jQuery: true, minimizable: false});
-		this.dialogId = this.window.appId;
-		this.canvas = null;
+		this.window = new MotionTrackerWindow();
 		this.currentCanvasPosition = MotionTracker.CONFIG.canvasZIndex;
 		this.currentUseHighDPI = MotionTracker.CONFIG.useHighDPI;
 	}
@@ -197,7 +150,7 @@ Hooks.on('ready', ()=>
 					this.open(request.user, request.ownerId, request.tokenReferenceId, request.viewedSceneId);
 				break;
 				case 'close':
-					this.close(false);
+					this.close();
 				break;
 				case 'update':
 				break;
@@ -236,26 +189,138 @@ Hooks.on('ready', ()=>
 	}
     
 	/**
-	 * Update the device with fresh new settgins.
+	 * Update the device with fresh new settings.
 	 *
 	 * @param settings
 	 */
 	update(settings)
 	{
-		this.device.update(settings);
+		this.window.update(settings);
 	}
-
+    
 	/**
-	 * Retrieve the canvas and build the motion tracking device then it renders
+	 * Show the motion tracker animation based on data configuration made by the User.
 	 *
+	 * @param user the user who made the call (game.user by default).
+	 * @param synchronize
+	 * @param users list of users or userId who can see the roll, leave it empty if everyone can see.
+	 * @param blind if the call is blind for the current user
 	 * @returns {Promise<boolean>} when resolved true if the animation was displayed, false if not.
 	 */
-	async setupDevice(dialog, html, data)
+	async open(user = game.user, ownerId = game.user.id, tokenId = null, viewedScene = game.user.viewedScene)
 	{
-		this.windowElement = dialog.element;
-		html[0].className += ' motion-tracker-dialog';
-		this.canvas = html.find('#motion-tracker-canvas');
-		// bind events
+		if(tokenId === null && canvas.tokens.controlled.length>0)
+			tokenId = canvas.tokens.controlled[0].data._id;
+		this.window.setData(user, ownerId, tokenId, viewedScene);
+		await this.window.render(true);
+		return new Promise((resolve, reject) =>
+		{
+			resolve();
+		});
+	}
+	close()
+	{
+		return new Promise((resolve, reject) =>
+		{
+			this.window.close();
+			resolve();
+		});
+	}
+
+	resize(size)
+	{
+		if(this.window!==null && this.window!==undefined)
+			this.window.resize(size);
+	}
+
+	toggle()
+	{
+		if(this.window.rendered)
+			this.close(true);
+		else
+			this.open();
+		return this.window.rendered===null;
+	}
+
+	onSettingsChange(data)
+	{
+		this.window.onSettingsChange(data);
+	}
+}
+
+/**
+ * Application window for the MotionTracker
+ */
+class MotionTrackerWindow extends Application
+{
+	constructor(options={})
+	{
+		super(options);
+		this.windowElement = null;
+		this.canvas = null;
+		this.device = null;
+		this.user = null;
+		this.ownerId = null;
+		this.tokenId = null;
+		this.viewedSceneId = null;
+	}
+
+	static get defaultOptions()
+	{
+		return mergeObject(super.defaultOptions,
+		{
+			title: game.i18n.localize('MOTIONTRACKER.MotionTrackerDialogTitle'),
+			id: "motion-tracker-window",
+			template: "modules/motion_tracker/templates/motion_tracker_window.html",
+			width: game.settings.get(settings.REGISTER_CODE, 'size'),
+			height: "auto"
+		})
+	}
+
+	/******************************
+	 * @override
+	 ******************************/
+	getData(options)
+	{
+		let data = mergeObject(MotionTracker.CONFIG, game.settings.get(settings.REGISTER_CODE, 'settings'), { insertKeys: false, insertValues: false });
+		data.ui = {audioMuteIcon: MotionTracker.CONFIG.audio.muted?'motion-tracker-options-unmute-ico':'motion-tracker-options-mute-ico'};
+		return data;
+	}
+
+	/******************************
+	 * @override
+	 ******************************/
+	async _render(...args)
+	{
+		// Render the application and restore focus
+		await super._render(...args);
+
+		this.windowElement = this.element[0];
+		this.windowElement.className += ' motion-tracker-dialog';
+		this.canvas = this.element.find('#motion-tracker-canvas')[0];
+
+		// style force
+		this.windowElement.style.height = null;
+		this.canvas.style.position = null;
+
+		let config = MotionTracker.ALL_CONFIG();
+		this.device = new MotionTrackerDevice(this.canvas, config);
+		this.device.setData(this.user, this.tokenId, this.viewedSceneId);
+
+		// notify the guys
+		if (this.ownerId==game.user.id)
+		{
+			game.socket.emit('module.motion_tracker', { type:'open', ownerId: this.ownerId, user: this.user, tokenReferenceId: this.tokenId, viewedSceneId: this.viewedScene });
+		}
+	}
+ 
+	/******************************
+	 * @override
+	 ******************************/
+	activateListeners(html)
+	{
+		super.activateListeners(html);
+		 
 		html.find('.motion-tracker-options-toggle').click(
 			e => {
 				e.preventDefault();
@@ -270,7 +335,8 @@ Hooks.on('ready', ()=>
 					html.find('.motion-tracker-options-close-ico').addClass('motion-tracker-options-open-ico').removeClass('motion-tracker-options-close-ico');
 					contentElement[0].style.display='none';
 				}
-			});
+			}
+		);
 		html.find('.motion-tracker-options-mute-toggle').click(
 			e => {
 				e.preventDefault();
@@ -284,101 +350,53 @@ Hooks.on('ready', ()=>
 					html.find('.motion-tracker-options-unmute-ico').addClass('motion-tracker-options-mute-ico').removeClass('motion-tracker-options-unmute-ico');
 					this.device.unMute();
 				}
-			});
-
-		// continue
-		await this.canvas!==null && this.canvas!==undefined;
-
-		const SIZE = game.settings.get(settings.REGISTER_CODE, 'size');
-		let config = MotionTracker.ALL_CONFIG();
-		this.device = new MotionTrackerDevice(this.canvas[0], config);
-		this.device.setData(this.user, this.tokenId, this.viewedSceneId);
-		this.resize(SIZE);
-	}
-    
-	/**
-	 * Show the motion tracker animation based on data configuration made by the User.
-	 *
-	 * @param user the user who made the call (game.user by default).
-	 * @param synchronize
-	 * @param users list of users or userId who can see the roll, leave it empty if everyone can see.
-	 * @param blind if the call is blind for the current user
-	 * @returns {Promise<boolean>} when resolved true if the animation was displayed, false if not.
-	 */
-	async open(user = game.user, ownerId = game.user.id, tokenId = null, viewedScene = game.user.viewedScene)
-	{
-		if(tokenId !== null)
-		{
-			this.tokenId = tokenId;
-		}
-		else if(this.tokenId === null && canvas.tokens.controlled.length>0)
-			this.tokenId = canvas.tokens.controlled[0].data._id;
-		this.user = user;
-		this.ownerId = ownerId;
-		this.viewedSceneId = viewedScene;
-		return new Promise((resolve, reject) =>
-		{
-			if (this.ownerId==game.user.id)
-			{
-				game.socket.emit('module.motion_tracker', { type:'open', ownerId: this.ownerId, user: this.user, tokenReferenceId: this.tokenId, viewedSceneId: this.viewedSceneId });
-			}
-			this.window.render(true);
-			resolve();
-		});
-	}
-	close(forward, closeWindow = true)
-	{
-		this._timeout = false;
-		//resize ended probably, lets remake the canvas
-		this.canvas = null;
-		return new Promise((resolve, reject) =>
-		{
-			if (forward && this.ownerId===game.user.id)
-			{
-				game.socket.emit('module.motion_tracker', { type:'close' });
-			}
-			if(this.device)
-			{
-				this.device.stop();
-				delete this.device;
-				this.device = null;
-			}
-			if(closeWindow)
-				this.window.close();
-			this.tokenId = null;
-			this.user = null;
-			this.ownerId = null;
-			this.windowElement = null;
-			resolve();
-		});
+			})
+		;
 	}
 
 	resize(size)
 	{
 		if(this.windowElement!==null && this.windowElement!==undefined && this.canvas!==null && this.canvas!==undefined)
 		{
-			//this.canvas[0].style.width  = size+'px';
-			//this.canvas[0].style.height = size+'px';
-			this.canvas[0].style.position = 'relative';
-			this.windowElement[0].style.width = size+'px';
-			this.windowElement[0].style.minHeight = size+'px';
-			this.windowElement[0].style.height = 'auto';
-			let title = $(this.windowElement[0]).find('.window-header');
-			title.css('background-color', '#194c99');
-			let content = $(this.windowElement[0]).find('.window-content');
-			//content.css('width', size+'px').css('height', size+'px').css('padding', '0');
+			this.windowElement.style.width = size+'px';
+			this.windowElement.style.minHeight = size+'px';
+			this.windowElement.style.height = 'auto';
 			if(this.device!==null && this.device!==undefined)
 				this.device.resize(size);
 		}
 	}
-
-	toggle()
+ 
+	close(options)
 	{
+		if(this.ownerId==game.user.id)
+		{
+			game.socket.emit('module.motion_tracker', { type:'close' });
+		}
 		if(this.device)
-			this.close(true);
-		else
-			this.open();
-		return this.device===null;
+		{
+			this.device.stop();
+			delete this.device;
+			this.device = null;
+		}
+		return super.close(options);
+	}
+
+	setData(user, ownerId, tokenId, sceneId)
+	{
+		this.user = user;
+		this.ownerId = ownerId;
+		this.tokenId = tokenId;
+		this.viewedSceneId = sceneId;
+	}
+    
+	/**
+	 * Update the device with fresh new settings.
+	 *
+	 * @param settings
+	 */
+	update(settings)
+	{
+		this.device.update(settings);
 	}
 
 	onSettingsChange(data)
@@ -386,4 +404,4 @@ Hooks.on('ready', ()=>
 		if(this.device!==null)
 			this.device.onSettingsChange(data);
 	}
-}
+ }
