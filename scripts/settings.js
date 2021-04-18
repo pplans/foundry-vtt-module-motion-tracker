@@ -75,16 +75,6 @@ function gmOnly_Settings(callbackResize)
 		}
 	});
 
-	game.settings.register(REGISTER_CODE,'defaultMuted',
-	{
-		name : 'MOTIONTRACKER.defaultMutedTitle',
-		hint : 'MOTIONTRACKER.defaultMutedHint',
-		scope :'world',
-		config : true,
-		default: false,
-		type : Boolean
-	});
-
 	game.settings.registerMenu(REGISTER_CODE, 'motion_tracker', {
 	    name: 'MOTIONTRACKER.config',
 	    label: 'MOTIONTRACKER.configTitle',

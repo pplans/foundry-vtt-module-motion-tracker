@@ -83,6 +83,6 @@
 {
 	width: 32px;
 	height: 32px;
-	background: no-repeat url("./textures/motion_tracker_options_mute_ico.webp");
+	background: no-repeat url("./textures/motion_tracker_options_unmute_ico.webp");
 	background-size: 32px;
 }
