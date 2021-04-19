@@ -322,9 +322,9 @@ class MotionTrackerWindow extends Application
 
 	renderPlayerList()
 	{
-		if(game.user.hasRole(USER_ROLES.ASSISTANT))
+		let jqPlayerList = this.element.find('#motion-tracker-options-player-list');
+		if(game.user.hasRole(USER_ROLES.ASSISTANT) && jqPlayerList.length>0)
 		{
-			let jqPlayerList = this.element.find('#motion-tracker-options-player-list');
 			jqPlayerList.empty();
 			let playerList = jqPlayerList[0];
 			// all button
@@ -493,6 +493,7 @@ class MotionTrackerWindow extends Application
 			const classAdded = type==='open'?'motion-tracker-hide-ico':'motion-tracker-show-ico';
 			this.element.find('#motion-tracker-visibility-'+request.senderId).addClass(classAdded).removeClass(classRemoved);
 		}
+		this.renderPlayerList();
 	}
 
 	sendCommand(target, type, notify=null)
