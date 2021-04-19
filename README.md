@@ -4,6 +4,22 @@ A module giving life to the Alien RPG motion tracker in foundry VTT
 The module installs a button just over the chat box that you can hit.
 When hitted, the button will scan for the nearest active and visibles tokens based on the selected token.
 
+## Player visibility control
+* In the window I added options to control visibility, just click on the arrow
+* Assitants and GMs can control who sees the Motion Tracker, GM has priority over Assistants
+* When players hit the Motion Tracker button, Assistants & GMs are notified opening automatically the MTs window
+* Opening the MTs does not automatically trigger the visibility for every player as before, so be aware of that
+* Greyed players are the one disconnected
+* The player with a color is the owner, the one whose tokens have been used with the MT, if there is no one with a color, you are the owner
+
+## Audio
+* Audio is supported now, it uses 4 clips of 1 second
+* All clips are configurable through the module options
+
+## v0.3.0
+* Added player visibility control
+* A lot of bugs have been fixed among them: not so circular scanning, distance computation
+
 ## v0.2.0
 * Added full audio support
 
@@ -46,6 +62,17 @@ If you select another token the display will update.
 Moving tokens will update the display also.
 Clicking on the button again will hide the motion tracker.
 The motion tracker is visible for everyone, there is an option in the settings to only allow having the button for the GM, but it won't update an UI already rendered so you have to kick your players out.
+
+## Roadmap
+### Customisation
+* Two more themes : the old Motion Tracker with green screen and a Med-Fan one
+
+### Configurable statuses
+* Make the statuses that are filtered configurable
+
+### Synchronize settings and player sessions
+
+### Investigate on check or not if we can get the player with the Motion Tracker
 
 # Special thanks
 Otakode - some indirect ideas and his feedbacks
