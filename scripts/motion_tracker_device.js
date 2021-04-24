@@ -298,6 +298,8 @@ export class MotionTrackerDevice
 						bPlayerControlled |= actor.data.permission[playerIds[i]]>2;
 					}
 				}
+				if(immobile===undefined)
+					immobile = actor.effects.find(e=> immobileStatuses.some(s=>s===e.data.flags.core.statusId));
 				let bSkip = bSeePlayers || !bPlayerControlled;
 				if(!immobile && bSkip && token._id!==this.tokenReference._id && !token.hidden)
 				{
