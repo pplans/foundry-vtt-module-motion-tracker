@@ -116,11 +116,31 @@ export class MotionTrackerDevice
 		{\
 		       return fract(tan(distance(xy*1.61803398874989484820459, xy)*seed)*xy.x);\
 		}\
+		float hash1D(float x)\
+		{\
+			return fract(abs(x)*1938.32179045493754903);\
+		}\
+		float smooth(float x)\
+		{\
+			float lower = floor(x);\
+			float frac = fract(x);\
+			float f = frac*frac*(3.0-2.0*frac);\
+			return mix(hash1D(lower-0.5), hash1D(lower+0.5), f);\
+		}\
+		float fbm(float x)\
+		{\
+		    float total = 0.0;\
+		    total += 0.5000*smooth(x); x*=2.001;\
+		    total += 0.2500*smooth(x); x*=2.003;\
+		    total += 0.1250*smooth(x); x*=2.002;\
+		    total += 0.0625*smooth(x); x*=2.001;\
+		    return clamp(total, 0.0, 1.0);\
+		}\
 		void main(void)\
 		{\
 			vec2 uv = vTextureCoord;\
-			float f = pow(abs(sin(0.01*time)), 256.);\
-			uv.x = uv.x+clamp(0.04*f*sin(4.*3.14*uv.y+time), -0.04, 0.04);\
+			float f = pow(fbm(0.05*time), 32.)*2048.;\
+			uv.x = uv.x+clamp(0.2*f*sin(4.*3.14*uv.y+time), -0.2, 0.2);\
 			vec4 tex = texture2D(uSampler, uv);\
 			vec4 c1 = vec4(.541, .824, .514, 1.);\
 			vec4 c2 = vec4(.482, 1.0, .471, 1.);\
@@ -317,7 +337,12 @@ export class MotionTrackerDevice
 		// PIXI context creation
 		if(this.pixi.app === null)
 		{
-			this.pixi.app = new PIXI.Application({width: SIZE, height: SIZE+MotionTrackerDevice.SCREEN_ADDITIONAL_CANVAS_HEIGHT, backgroundColor: 0x000000ff});
+			this.pixi.app = new PIXI.Application(
+				{
+					width: SIZE, height: SIZE+MotionTrackerDevice.SCREEN_ADDITIONAL_CANVAS_HEIGHT,
+					backgroundColor: 0x000000ff, clearBeforeRender: true,
+					useContextAlpha: false
+				});
 		}
 		
 		this.pixi.app.stage.removeChildren();
