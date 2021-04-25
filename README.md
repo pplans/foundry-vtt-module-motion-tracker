@@ -16,6 +16,10 @@ When hitted, the button will scan for the nearest active and visibles tokens bas
 * Audio is supported now, it uses 4 clips of 1 second
 * All clips are configurable through the module options
 
+## v0.4.0
+* Added theme system
+* Added Arious theme
+
 ## v0.3.0
 * Added player visibility control
 * A lot of bugs have been fixed among them: not so circular scanning, distance computation
