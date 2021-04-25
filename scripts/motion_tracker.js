@@ -381,19 +381,27 @@ class MotionTrackerWindow extends Application
 		// Render the application and restore focus
 		await super._render(...args);
 
+		const settingsData = game.settings.get(settings.REGISTER_CODE, 'settings');
+
 		this.windowElement = this.element[0];
-		this.windowElement.className += ' motion-tracker-dialog';
+		this.windowElement.className += ' motion-tracker-dialog'; // necessary for Weyland mod
+		this.windowElement.className += ' '+settingsData.general.theme;
 		this.canvas = this.element.find('#motion-tracker-canvas')[0];
+		for(let i = 0;i < this.windowElement.children.length; ++i)
+		{
+			this.windowElement.children[i].className+= ' '+settingsData.general.theme;
+		}
+		this.element.find('#motion-tracker-options')[0].className+= ' '+settingsData.general.theme;
+		this.canvas.className += ' '+settingsData.general.theme;
 
 		// content building
 		this.renderPlayerList();
 
 		// style force
-		this.windowElement.style.height = null;
-		this.canvas.style.position = null;
+		this.windowResetStyle();
 
 		let config = MotionTracker.ALL_CONFIG();
-		this.device = new MotionTrackerDevice(this.canvas, config);
+		this.device = new MotionTrackerDevice(this.canvas, this.deviceIsReady.bind(this), config);
 		this.device.setData(this.user, this.tokenId, this.viewedSceneId);
 
 		if(this.ownerId===game.user.data._id)
@@ -401,6 +409,19 @@ class MotionTrackerWindow extends Application
 			this.sendCommand(null, 'init');
 		}
 		this.sendCommand(game.user.data._id, 'open', 'notify');
+	}
+
+	windowResetStyle()
+	{
+		this.windowElement.style.width = null;
+		this.windowElement.style.height = null;
+		this.canvas.style.position = null;
+	}
+
+	deviceIsReady()
+	{
+		const settingsData = game.settings.get(settings.REGISTER_CODE, 'settings');
+		this.element.find('canvas')[0].className += ' '+settingsData.general.theme;
 	}
  
 	/******************************
@@ -423,9 +444,8 @@ class MotionTrackerWindow extends Application
 				{
 					html.find('.motion-tracker-options-close-ico').addClass('motion-tracker-options-open-ico').removeClass('motion-tracker-options-close-ico');
 					contentElement[0].style.display='none';
-					// cancel height
-					this.windowElement.style.height = null;
 				}
+				this.windowResetStyle();
 			}
 		);
 		html.find('.motion-tracker-options-mute-toggle').click(

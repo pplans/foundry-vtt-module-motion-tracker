@@ -119,11 +119,8 @@ export class MotionTrackerDevice
 		void main(void)\
 		{\
 			vec2 uv = vTextureCoord;\
-			float g = pow(fract(0.2*time), 128.);\
-			uv.x += sin(abs(uv.y-.5)*g);\
-			float c = cos(3.14*g), s = sin(3.14*g);\
-			mat2 r = mat2(c, -s, s, c);\
-			uv=r*uv;\
+			float f = pow(abs(sin(0.01*time)), 256.);\
+			uv.x = uv.x+clamp(0.04*f*sin(4.*3.14*uv.y+time), -0.04, 0.04);\
 			vec4 tex = texture2D(uSampler, uv);\
 			vec4 c1 = vec4(.541, .824, .514, 1.);\
 			vec4 c2 = vec4(.482, 1.0, .471, 1.);\
@@ -147,6 +144,8 @@ export class MotionTrackerDevice
 	{
 		M314:
 		{
+			textColor: 0x994d1a,
+			textPosition: 'bottom-center',
 			emissive: 1.,
 			shaders:
 			{
@@ -156,6 +155,8 @@ export class MotionTrackerDevice
 		},
 		Arious:
 		{
+			textColor: 0x8ad283,
+			textPosition: 'bottom-left',
 			emissive: 2.,
 			shaders:
 			{
@@ -165,7 +166,7 @@ export class MotionTrackerDevice
 		}
 	};
 
-	constructor(element_container, config)
+	constructor(element_container, cbIsReady, config)
 	{
 		MotionTrackerDevice.uniformsPing.time = 0.0;
 		MotionTrackerDevice.uniformsBackground.time = 0.0;
@@ -180,6 +181,8 @@ export class MotionTrackerDevice
 		this.signals = [];
 		this.signalsMax = 20;
 
+		this.cbIsReady = cbIsReady;
+
 		const SIZE = game.settings.get(settings.REGISTER_CODE, 'size');
 		
 		const distanceMax = game.settings.get(settings.REGISTER_CODE,'maxDistance');
@@ -192,15 +195,22 @@ export class MotionTrackerDevice
 		this.volume = conf.audio.volume;
 		this.bMute = conf.audio.muted;
 		// Renderer specific
+		const settingsData = game.settings.get(settings.REGISTER_CODE, 'settings');
+		const configTheme = MotionTrackerDevice.THEMES_DATA[settingsData.general.theme];
 		this.pixi = {
 			app: null,
 			sprite_background: null,
 			sprites_signals: [],
 			filter_ping: new PIXI.Filter(MotionTrackerDevice.vertShaderPing, MotionTrackerDevice.fragShaderPing, MotionTrackerDevice.uniformsPing),
-			distanceMessage: new PIXI.Text('',{fontFamily : 'Roboto', fontSize: Math.max(12, 32*(SIZE-settings.MIN_SIZE)/(settings.MAX_SIZE-settings.MIN_SIZE)), fontWeight: 'bold', fill : 0x994d1a, align : 'center'})
+			distanceMessage: new PIXI.Text('',
+			{
+				fontFamily : 'Roboto',
+				fontSize: Math.max(12, 32*(SIZE-settings.MIN_SIZE)/(settings.MAX_SIZE-settings.MIN_SIZE)),
+				fontWeight: 'bold',
+				fill : configTheme.textColor,
+				align : 'center'
+			})
 		};
-
-		this.ready = false;
 
 		// data
 		this.textures =
@@ -217,7 +227,7 @@ export class MotionTrackerDevice
 
 	preloadSounds()
 	{
-		let settingsData = game.settings.get(settings.REGISTER_CODE, 'settings');
+		const settingsData = game.settings.get(settings.REGISTER_CODE, 'settings');
 		let foundsounds = [settingsData.audio.wave.src, settingsData.audio.close.src, settingsData.audio.medium.src, settingsData.audio.far.src];
 		foundsounds.forEach(v => 
 		{
@@ -252,7 +262,7 @@ export class MotionTrackerDevice
 		const distanceMax = game.settings.get(settings.REGISTER_CODE,'maxDistance');
 		this.distUnitPerPx = SIZE*.5/distanceMax;
 		
-		let settingsData = game.settings.get(settings.REGISTER_CODE, 'settings');
+		const settingsData = game.settings.get(settings.REGISTER_CODE, 'settings');
 
 		const configTheme = MotionTrackerDevice.THEMES_DATA[settingsData.general.theme];
 
@@ -301,17 +311,13 @@ export class MotionTrackerDevice
 				this.pixi.sprites_signals[i].height = Math.max(32, SIZE/32*this.distUnitPerPx);
 			}
 		}
-	      
-		//Add the cat to the stage so you can see it
-
-		this.ready = true;
 
 		await this.container!==null;
 
 		// PIXI context creation
 		if(this.pixi.app === null)
 		{
-			this.pixi.app = new PIXI.Application({width: SIZE, height: SIZE+MotionTrackerDevice.SCREEN_ADDITIONAL_CANVAS_HEIGHT});
+			this.pixi.app = new PIXI.Application({width: SIZE, height: SIZE+MotionTrackerDevice.SCREEN_ADDITIONAL_CANVAS_HEIGHT, backgroundColor: 0x000000ff});
 		}
 		
 		this.pixi.app.stage.removeChildren();
@@ -320,6 +326,7 @@ export class MotionTrackerDevice
 
 		// setup base
 		this.pixi.app.renderer.backgroundColor = 0x000000;
+		this.pixi.app.renderer.clear();
 		const backgroundAndPings = new PIXI.Container();
 		backgroundAndPings.width = SIZE;
 		backgroundAndPings.height = SIZE+MotionTrackerDevice.SCREEN_ADDITIONAL_CANVAS_HEIGHT;
@@ -333,7 +340,7 @@ export class MotionTrackerDevice
 		if(configTheme.shaders.postProcess!==null)
 		{
 			const filter = new PIXI.Filter(null, configTheme.shaders.postProcess, MotionTrackerDevice.uniformPostProcess);
-			backgroundAndPings.filters = [filter];
+			this.pixi.app.stage.filters = [filter];
 		}
 		this.pixi.distanceMessage.anchor.set(0.5, 0.5);
 		this.pixi.app.stage.addChild(backgroundAndPings);
@@ -341,6 +348,7 @@ export class MotionTrackerDevice
 		this.pixi.app.ticker.add(this.update, this);
 		//this.sound_wave = setInterval(() => this.playSound(['modules/motion_tracker/sounds/motion_tracker_wave.wav', 1.]), 100000.*MotionTrackerDevice.TRACK_SPEED);
 		this.preloadSounds();
+		this.cbIsReady();
 	}
 
 	async reset()
@@ -431,8 +439,21 @@ export class MotionTrackerDevice
 			else
 				this.pixi.sprites_signals[i].visible = false;
 		}
-		this.pixi.distanceMessage.x = centerCanvas.x;
-		this.pixi.distanceMessage.y = this.pixi.app.stage.height-5.-32.*(this.pixi.app.stage.width-settings.MIN_SIZE)/(settings.MAX_SIZE-settings.MIN_SIZE);
+		
+		{
+			const settingsData = game.settings.get(settings.REGISTER_CODE, 'settings');
+			const configTheme = MotionTrackerDevice.THEMES_DATA[settingsData.general.theme];
+			
+			if(configTheme.textPosition==='bottom-center')
+			{
+				this.pixi.distanceMessage.x = centerCanvas.x;
+			}
+			else
+			{
+				this.pixi.distanceMessage.x = .25*centerCanvas.x;
+			}
+			this.pixi.distanceMessage.y = this.pixi.app.stage.height-5.-32.*(this.pixi.app.stage.width-settings.MIN_SIZE)/(settings.MAX_SIZE-settings.MIN_SIZE);
+		}
 		
 		let x = MotionTrackerDevice.uniformsPing.time*MotionTrackerDevice.uniformsPing.speed;
 		function fract(x)
@@ -445,7 +466,7 @@ export class MotionTrackerDevice
 		);
 
 		// deplay sounds by 0.1
-		let settingsData = game.settings.get(settings.REGISTER_CODE, 'settings');
+		const settingsData = game.settings.get(settings.REGISTER_CODE, 'settings');
 		if(!this.bMute)
 		{
 			if(x>0.1 && x<0.2 && this.sound_wave===null)
