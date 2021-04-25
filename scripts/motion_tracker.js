@@ -78,7 +78,8 @@ Hooks.on('updatePlayer', () =>
 			useHighDPI:true,
 			general:
 			{
-				speed: MotionTrackerDevice.TRACK_SPEED
+				speed: MotionTrackerDevice.TRACK_SPEED,
+				theme: 'M314'
 			},
 			audio:
 			{

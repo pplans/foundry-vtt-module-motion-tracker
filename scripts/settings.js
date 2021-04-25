@@ -1,4 +1,5 @@
 import {MotionTracker} from './motion_tracker.js'
+import { MotionTrackerDevice } from './motion_tracker_device.js';
 
 export function registerSettings(callbackResize)
 {
@@ -115,6 +116,9 @@ class MotionTrackerConfig extends FormApplication
 	{
 		let data = mergeObject(MotionTracker.CONFIG, game.settings.get(REGISTER_CODE, 'settings'), { insertKeys: false, insertValues: false });
 		data.audio.mutedChecked = data.audio.muted?'checked':'';
+
+		data.general.themelist = [];
+		MotionTrackerDevice.THEME_LIST.forEach(t => data.general.themelist.push({value: t, selected:t===data.general.theme?'selected':''}));
 		return data;
 	}
 
@@ -157,7 +161,8 @@ class MotionTrackerConfig extends FormApplication
 		{
 			general:
 			{
-				speed: formData['scan-speed']
+				speed: formData['scan-speed'],
+				theme: formData['theme']
 			},
 			audio:
 			{

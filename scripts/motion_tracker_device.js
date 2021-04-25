@@ -14,7 +14,7 @@ export class MotionTrackerDevice
 			 );\
 	}\
 	';
-	static fragShaderBackground = '\
+	static fragShaderM314Background = '\
 		varying vec2 vTextureCoord;\
 		uniform sampler2D uSampler;\
 		uniform float time;\
@@ -54,6 +54,7 @@ export class MotionTrackerDevice
 		uniform sampler2D uSampler;\
 		uniform float time;\
 		uniform float speed;\
+		uniform float emissive;\
 		uniform float centerx;\
 		uniform float centery;\
 		uniform float distmax;\
@@ -65,17 +66,104 @@ export class MotionTrackerDevice
 			vec2 d = normalize(cp);\
 			float s = 2.*signal(speed*time);\
 			s = s*length(c*d)>length(cp)?exp(-1.5*fract(speed*time)):0.;\
-			gl_FragColor = s*texture2D(uSampler, vTextureCoord).rrrr;\
+			gl_FragColor = emissive*s*texture2D(uSampler, vTextureCoord).rrrr;\
+		}';
+	static fragShaderAriousBackground = '\
+		varying vec2 vTextureCoord;\
+		uniform sampler2D uSampler;\
+		uniform float time;\
+		uniform float speed;\
+		uniform float centerx;\
+		uniform float centery;\
+		uniform float ratio;\
+		'+MotionTrackerDevice.signalFunc+'\
+		void main(void)\
+		{\
+			vec4 tex = texture2D(uSampler, vTextureCoord);\
+			vec2 rc = 2.*(vTextureCoord*vec2(1., 1./ratio)-vec2(.5));\
+			vec2 d = normalize(rc);\
+			float s = signal(speed*time);\
+			s = s>0.05?(tex.a*pow(clamp(1.-length(vTextureCoord*vec2(1., 1./ratio)-(s*d+vec2(.5)))-.75, 0., 1.)*4., 16.)):0.;\
+			s *= 1.+log(-fract(speed*time)+1.);\
+			gl_FragColor = mix(vec4(tex.rgb, 1.), vec4(1.), s);\
+		}';
+	static fragShaderAriousPostProcess = '\
+		varying vec2 vTextureCoord;\
+		uniform sampler2D uSampler;\
+		uniform float time;\
+		uniform float ratio;\
+		/*uint hash( uint x )\
+		{\
+			x += ( x << 10u );\
+			x ^= ( x >>  6u );\
+			x += ( x <<  3u );\
+			x ^= ( x >> 11u );\
+			x += ( x << 15u );\
+			return x;\
+		}\
+		uint hash( uvec2 v ) { return hash(v.x ^ hash(v.y)); }\
+		float uintToFloat(uint m)\
+		{\
+			return uintBitsToFloat(0x3F800000u|(m&0x007FFFFFu) ) - 1.0;\
+		}\
+		float random( vec2  v ) { return uintToFloat(hash(vec2(floatBitsToUint(v.x), floatBitsToUint(v.y)))); }\
+		float hash(vec2 uv) \
+		{\
+			uv = vec2(dot(uv, vec2(143.9843084, 324.39290843093)), dot(uv, vec2(-43.24392108, 17.320984398344)));\
+			return fract((1.+sin(uv.x))*(1.+cos(uv.y)));\
+		}*/\
+		float noise(in vec2 xy, in float seed)\
+		{\
+		       return fract(tan(distance(xy*1.61803398874989484820459, xy)*seed)*xy.x);\
+		}\
+		void main(void)\
+		{\
+			vec2 uv = vTextureCoord;\
+			float g = pow(fract(0.2*time), 128.);\
+			uv.x += sin(abs(uv.y-.5)*g);\
+			float c = cos(3.14*g), s = sin(3.14*g);\
+			mat2 r = mat2(c, -s, s, c);\
+			uv=r*uv;\
+			vec4 tex = texture2D(uSampler, uv);\
+			vec4 c1 = vec4(.541, .824, .514, 1.);\
+			vec4 c2 = vec4(.482, 1.0, .471, 1.);\
+			vec4 c3 = vec4(.188, .290, .180, 1.);\
+			float lc = 2.*length(vTextureCoord*vec2(1., 1./ratio)-vec2(.3));\
+			gl_FragColor = mix(c2,c3,lc)+c1*tex;\
 		}';
 	// END SHADER BLOCK
 	static RATIO = 0.944; /* width of the background texture over its height */
 	static TRACK_SPEED = 0.01;
 	static uniformsBackground = {time: 0., speed: MotionTrackerDevice.TRACK_SPEED, centerx: 0., centery: 0., ratio: 1., uSampler: null};
-	static uniformsPing = {time: 0., speed: MotionTrackerDevice.TRACK_SPEED, centerx: 0., centery: 0., distmax: 0.};
+	static uniformsPing = {time: 0., speed: MotionTrackerDevice.TRACK_SPEED, emissive: 1., centerx: 0., centery: 0., distmax: 0.};
+	static uniformPostProcess = {time: 0., ratio: 1.};
 
 	static SCREEN_ADDITIONAL_TEXEL_HEIGHT = 64;
 	static SCREEN_ADDITIONAL_CANVAS_HEIGHT = 64./1024;
 	static BACKGROUND_MT_PADDING_SCALE_TOTAL = 0.125;
+
+	static THEME_LIST = ['M314', 'Arious'];
+	static THEMES_DATA =
+	{
+		M314:
+		{
+			emissive: 1.,
+			shaders:
+			{
+				background: MotionTrackerDevice.fragShaderM314Background,
+				postProcess: null
+			}
+		},
+		Arious:
+		{
+			emissive: 2.,
+			shaders:
+			{
+				background: MotionTrackerDevice.fragShaderM314Background,
+				postProcess: MotionTrackerDevice.fragShaderAriousPostProcess
+			}
+		}
+	};
 
 	constructor(element_container, config)
 	{
@@ -115,8 +203,13 @@ export class MotionTrackerDevice
 		this.ready = false;
 
 		// data
-		this.textures = {
-			background: 'modules/motion_tracker/textures/motion_tracker_background.png',
+		this.textures =
+		{
+			background:
+			{
+				M314: 'modules/motion_tracker/textures/motion_tracker_m314_background.png',
+				Arious:  'modules/motion_tracker/textures/motion_tracker_arious_background.png'
+			},
 			ping: 'modules/motion_tracker/textures/motion_tracker_ping.webp',
 		};
 		this.loadTextures();
@@ -143,7 +236,7 @@ export class MotionTrackerDevice
 		{
 			MotionTrackerDevice.PIXILoader =  new PIXI.Loader();
 			MotionTrackerDevice.PIXILoader
-			.add([this.textures.background, this.textures.ping])
+			.add([this.textures.background.M314, this.textures.background.Arious, this.textures.ping])
 			.load(this.loadTexturesFinish.bind(this));
 		}
 		else
@@ -158,14 +251,18 @@ export class MotionTrackerDevice
 		
 		const distanceMax = game.settings.get(settings.REGISTER_CODE,'maxDistance');
 		this.distUnitPerPx = SIZE*.5/distanceMax;
+		
+		let settingsData = game.settings.get(settings.REGISTER_CODE, 'settings');
+
+		const configTheme = MotionTrackerDevice.THEMES_DATA[settingsData.general.theme];
 
 		//Create the `cat` sprite
-		PIXI.utils.TextureCache[this.textures.background].baseTexture.alphaMode = PIXI.ALPHA_MODES.NO_PREMULTIPLIED_ALPHA;
-		PIXI.utils.TextureCache[this.textures.background].baseTexture.update();
+		PIXI.utils.TextureCache[this.textures.background[settingsData.general.theme]].baseTexture.alphaMode = PIXI.ALPHA_MODES.NO_PREMULTIPLIED_ALPHA;
+		PIXI.utils.TextureCache[this.textures.background[settingsData.general.theme]].baseTexture.update();
 		if(this.pixi.sprite_background===null)
 		{
-			MotionTrackerDevice.uniformsBackground.uSampler = PIXI.utils.TextureCache[this.textures.background];
-			const backgroundShdr = PIXI.Shader.from(null, MotionTrackerDevice.fragShaderBackground, MotionTrackerDevice.uniformsBackground);
+			MotionTrackerDevice.uniformsBackground.uSampler = PIXI.utils.TextureCache[this.textures.background[settingsData.general.theme]];
+			const backgroundShdr = PIXI.Shader.from(null, configTheme.shaders.background, MotionTrackerDevice.uniformsBackground);
 			const QuadGeometry = new PIXI.Geometry()
 			    .addAttribute('aVertexPosition', // the attribute name
 				[
@@ -223,14 +320,23 @@ export class MotionTrackerDevice
 
 		// setup base
 		this.pixi.app.renderer.backgroundColor = 0x000000;
+		const backgroundAndPings = new PIXI.Container();
+		backgroundAndPings.width = SIZE;
+		backgroundAndPings.height = SIZE+MotionTrackerDevice.SCREEN_ADDITIONAL_CANVAS_HEIGHT;
 		
 		this.pixi.sprite_background.blendMode = PIXI.BLEND_MODES.ADD;
-		this.pixi.app.stage.addChild(this.pixi.sprite_background);
+		backgroundAndPings.addChild(this.pixi.sprite_background);
 		for(let i = 0;i<this.pixi.sprites_signals.length;++i)
 		{
-			this.pixi.app.stage.addChild(this.pixi.sprites_signals[i]);
+			backgroundAndPings.addChild(this.pixi.sprites_signals[i]);
+		}
+		if(configTheme.shaders.postProcess!==null)
+		{
+			const filter = new PIXI.Filter(null, configTheme.shaders.postProcess, MotionTrackerDevice.uniformPostProcess);
+			backgroundAndPings.filters = [filter];
 		}
 		this.pixi.distanceMessage.anchor.set(0.5, 0.5);
+		this.pixi.app.stage.addChild(backgroundAndPings);
 		this.pixi.app.stage.addChild(this.pixi.distanceMessage);
 		this.pixi.app.ticker.add(this.update, this);
 		//this.sound_wave = setInterval(() => this.playSound(['modules/motion_tracker/sounds/motion_tracker_wave.wav', 1.]), 100000.*MotionTrackerDevice.TRACK_SPEED);
@@ -387,6 +493,9 @@ export class MotionTrackerDevice
 		MotionTrackerDevice.uniformsPing.speed = MotionTrackerDevice.uniformsBackground.speed;
 		MotionTrackerDevice.uniformsPing.centerx = centerCanvas.x;
 		MotionTrackerDevice.uniformsPing.centery = centerCanvas.y*MotionTrackerDevice.uniformsBackground.ratio;
+		MotionTrackerDevice.uniformPostProcess.time += delta;
+		MotionTrackerDevice.uniformPostProcess.ratio = MotionTrackerDevice.uniformsBackground.ratio;
+		MotionTrackerDevice.uniformsPing.emissive = MotionTrackerDevice.THEMES_DATA[settingsData.general.theme].emissive;
 	}
 
 	setData(user = game.user, tokenId, viewedSceneId)
