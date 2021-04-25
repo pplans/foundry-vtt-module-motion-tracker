@@ -16,6 +16,8 @@
 	"MOTIONTRACKER.scanSpeed": "Tracking animation speed",
 	"MOTIONTRACKER.themeTitle": "Theme",
 	"MOTIONTRACKER.themeHint": "Will change appareance of the motion tracker",
+	"MOTIONTRACKER.enablePostProcessTitle": "Enable Post Process animation effects",
+	"MOTIONTRACKER.enablePostProcessHint": "If unchecked it will disable some unnerving animations like a glitch for example",
 	"MOTIONTRACKER.settingsAudio": "Audio",
 	"MOTIONTRACKER.defaultMutedTitle": "Mute by default?",
 	"MOTIONTRACKER.defaultMutedHint": "Will default mute the Motion Tracker, so that there will be no sound at all until activated",

@@ -1,4 +1,5 @@
 import * as settings from './settings.js'
+import {MotionTracker} from './motion_tracker.js'
 
 export class MotionTrackerDevice
 {
@@ -92,6 +93,7 @@ export class MotionTrackerDevice
 		uniform sampler2D uSampler;\
 		uniform float time;\
 		uniform float ratio;\
+		uniform float scaleGlitch;\
 		/*uint hash( uint x )\
 		{\
 			x += ( x << 10u );\
@@ -140,7 +142,7 @@ export class MotionTrackerDevice
 		{\
 			vec2 uv = vTextureCoord;\
 			float f = pow(fbm(0.05*time), 32.)*2048.;\
-			uv.x = uv.x+clamp(0.2*f*sin(4.*3.14*uv.y+time), -0.2, 0.2);\
+			uv.x = uv.x+scaleGlitch*clamp(0.2*f*sin(4.*3.14*uv.y+time), -0.2, 0.2);\
 			vec4 tex = texture2D(uSampler, uv);\
 			vec4 c1 = vec4(.541, .824, .514, 1.);\
 			vec4 c2 = vec4(.482, 1.0, .471, 1.);\
@@ -153,7 +155,7 @@ export class MotionTrackerDevice
 	static TRACK_SPEED = 0.01;
 	static uniformsBackground = {time: 0., speed: MotionTrackerDevice.TRACK_SPEED, centerx: 0., centery: 0., ratio: 1., uSampler: null};
 	static uniformsPing = {time: 0., speed: MotionTrackerDevice.TRACK_SPEED, emissive: 1., centerx: 0., centery: 0., distmax: 0.};
-	static uniformPostProcess = {time: 0., ratio: 1.};
+	static uniformPostProcess = {time: 0., ratio: 1., scaleGlitch: 1.};
 
 	static SCREEN_ADDITIONAL_TEXEL_HEIGHT = 64;
 	static SCREEN_ADDITIONAL_CANVAS_HEIGHT = 64./1024;
@@ -491,7 +493,7 @@ export class MotionTrackerDevice
 		);
 
 		// deplay sounds by 0.1
-		const settingsData = game.settings.get(settings.REGISTER_CODE, 'settings');
+		const settingsData = MotionTracker.ALL_CONFIG();
 		if(!this.bMute)
 		{
 			if(x>0.1 && x<0.2 && this.sound_wave===null)
@@ -539,9 +541,10 @@ export class MotionTrackerDevice
 		MotionTrackerDevice.uniformsPing.speed = MotionTrackerDevice.uniformsBackground.speed;
 		MotionTrackerDevice.uniformsPing.centerx = centerCanvas.x;
 		MotionTrackerDevice.uniformsPing.centery = centerCanvas.y*MotionTrackerDevice.uniformsBackground.ratio;
+		MotionTrackerDevice.uniformsPing.emissive = MotionTrackerDevice.THEMES_DATA[settingsData.general.theme].emissive;
 		MotionTrackerDevice.uniformPostProcess.time += delta;
 		MotionTrackerDevice.uniformPostProcess.ratio = MotionTrackerDevice.uniformsBackground.ratio;
-		MotionTrackerDevice.uniformsPing.emissive = MotionTrackerDevice.THEMES_DATA[settingsData.general.theme].emissive;
+		MotionTrackerDevice.uniformPostProcess.scaleGlitch = settingsData.rendering.enablePostProcess?1.:0.;
 	}
 
 	setData(user = game.user, tokenId, viewedSceneId)

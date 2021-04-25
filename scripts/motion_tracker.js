@@ -81,6 +81,10 @@ Hooks.on('updatePlayer', () =>
 				speed: MotionTrackerDevice.TRACK_SPEED,
 				theme: 'M314'
 			},
+			rendering:
+			{
+				enablePostProcess: true
+			},
 			audio:
 			{
 				muted: false,

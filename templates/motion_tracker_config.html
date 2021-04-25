@@ -20,8 +20,15 @@
                         <option value="{{themeValue.value}}" {{themeValue.selected}}>{{themeValue.value}}</option>
                         {{/each}}
                     </select>
-                    <p class="notes">{{localize "MOTIONTRACKER.themeHint"}}</p>
                 </div>
+                <p class="notes">{{localize "MOTIONTRACKER.themeHint"}}</p>
+            </div>
+            <div class="form-group">
+                <label>{{localize "MOTIONTRACKER.enablePostProcessTitle"}}</label>
+                <div class="form-fields">
+                    <input type="checkbox" name="enablePostProcess" data-dtype="Number" {{rendering.enablePostProcessChecked}}>
+                </div>
+                <p class="notes">{{localize "MOTIONTRACKER.enablePostProcessHint"}}</p>
             </div>
         </div>
         <div class="tab" data-tab="audio">
