@@ -192,6 +192,8 @@ export class MotionTrackerDevice
 	{
 		MotionTrackerDevice.uniformsPing.time = 0.0;
 		MotionTrackerDevice.uniformsBackground.time = 0.0;
+		MotionTrackerDevice.uniformPostProcess.time = 0.0;
+		MotionTrackerDevice.uniformPostProcess.scaleGlitch = MotionTracker.ALL_CONFIG().rendering.enablePostProcess?1.:0.;
 		//private variables
 		this.container = element_container;
 		this.dimensions = config.dimensions;
