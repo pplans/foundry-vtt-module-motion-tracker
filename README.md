@@ -16,6 +16,13 @@ When hitted, the button will scan for the nearest active and visibles tokens bas
 * Audio is supported now, it uses 4 clips of 1 second
 * All clips are configurable through the module options
 
+## v0.5.0
+* Hidden token does not count anymore for the Motion Tracker filtering, you now have to use the statuses
+* Added a configuration panel for statuses
+
+## v0.4.1
+* Fixed post process animation for Arious not following after a while
+
 ## v0.4.0
 * Added theme system
 * Added Arious theme

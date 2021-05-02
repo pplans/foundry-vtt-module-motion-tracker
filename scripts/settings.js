@@ -6,6 +6,7 @@ export function registerSettings(callbackResize)
   gmOnly_Settings(callbackResize);
 }
 
+export const VERSION = '0.5.0';
 export const REGISTER_CODE = 'motion_tracker';
 export const MIN_SIZE = 64;
 export const MAX_SIZE = 512;
@@ -117,7 +118,16 @@ class MotionTrackerConfig extends FormApplication
 		let data = mergeObject(MotionTracker.CONFIG, game.settings.get(REGISTER_CODE, 'settings'), { insertKeys: false, insertValues: false });
 		data.rendering.enablePostProcessChecked = data.rendering.enablePostProcess?'checked':'';
 		data.audio.mutedChecked = data.audio.muted?'checked':'';
-
+		data.statusFiltersExt = [];
+		CONFIG.statusEffects.forEach(s => {
+			data.statusFiltersExt.push({
+				id: s.id,
+				label: game.i18n.localize(s.label),
+				icon: s.icon,
+				status: MotionTrackerDevice.STATUS_MANDATORY.find(id=> id===s.id)?'mandatory':(data.statusFilters.find(id => id===s.id)!==undefined?'selected':'')
+			});
+		});
+		data.isGM = game.user.hasRole(USER_ROLES.ASSISTANT);
 		data.general.themelist = [];
 		MotionTrackerDevice.THEME_LIST.forEach(t => data.general.themelist.push({value: t, selected:t===data.general.theme?'selected':''}));
 		return data;
@@ -127,6 +137,25 @@ class MotionTrackerConfig extends FormApplication
 	{
 		super.activateListeners(html);
 		html.find('button[name="reset"]').click(this._onReset.bind(this));
+		html.find('.status-item').click(event =>
+			{
+				event.preventDefault();
+				let element = $(event.currentTarget);
+				if(element.hasClass('mandatory'))
+				{
+					return;
+				}
+				else if(element.hasClass('selected'))
+				{
+					element.removeClass('selected');
+					element.next().val('');
+				}
+				else
+				{
+					element.addClass('selected');
+					element.next().val('selected');
+				}
+			});
 		html.find('file-picker').click(event =>
 		{
 			event.preventDefault();
@@ -158,6 +187,15 @@ class MotionTrackerConfig extends FormApplication
 
 	async _updateObject(event, formData)
 	{
+		let statusFiltersTraited = [];
+		Object.entries(formData).forEach(e =>
+			{
+				let found = e[0].match(/statusFilters\[(?<id>.*)\]/);
+				if(found!==null && found.groups!==null && e[1]==='selected')
+				{
+					statusFiltersTraited.push(found.groups.id);
+				}
+			});
 		let data =
 		{
 			general:
@@ -165,6 +203,7 @@ class MotionTrackerConfig extends FormApplication
 				speed: formData['scan-speed'],
 				theme: formData['theme']
 			},
+			statusFilters: statusFiltersTraited,
 			rendering:
 			{
 				enablePostProcess: formData['enablePostProcess']

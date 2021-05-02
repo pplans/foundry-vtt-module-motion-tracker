@@ -68,14 +68,40 @@
 	border-radius: 25px;
 }
 
-#motion-tracker-options
-{
-	/*background-color: #194c99;*/
-}
-
 #motion-tracker-options-content
 {
 	display: none;
+}
+
+.motion-tracker .form-fields.status-container
+{
+	display: grid;
+	margin: 0;
+	padding: 0;
+	padding-left: 5px;
+	-webkit-box-align: center;
+	-ms-flex-align: center;
+	align-items: center;
+	grid-template-columns: repeat(8, 1fr);
+}
+
+.motion-tracker .status-item
+{
+	width: 32px;
+	height: 32px;
+	background-color:#55555588;
+}
+
+.motion-tracker .selected
+{
+	background-color:#00ff0088;
+	border: 2px solid #00aa00;
+}
+
+.motion-tracker .mandatory
+{
+	background-color:#ff550088;
+	border: 2px solid #ff3300;
 }
 
 .motion-tracker-options-open-ico
