@@ -1,6 +1,8 @@
 {
 	"MOTIONTRACKER.WelcomeTitle": "Welcome to the Motion Tracker module",
 	"MOTIONTRACKER.WelcomeMessage": "This module was developped in order to bring some depth for the Alien RPG motion tracker tool we all love. When the button left of the dice in the chat is hit, the motion tracking window will show up. Beware, it won't work if you did not selected a token before. The signals are simply other visible tokens in the same scene, there are also a few filters as some statuses that work. Have fun!",
+	"MOTIONTRACKER.UpdateTitle": "Motion Tracker Update 0.5.0",
+	"MOTIONTRACKER.UpdateMessage": "Dear Motion Tracker users, this version (0.5.0) has changed a core feature: the tokens detection is no longer using token visibility but instead rely on the tokens statuses. The statuses the Motion Tracker use can be configured within the settings. For the occasion, I added a new status with its own icon that can be used only for this purpose, see the icon below. Have fun and enjoy your game!",
 	"MOTIONTRACKER.config": "Motion Tracker configuration",
 	"MOTIONTRACKER.configTitle": "Motion Tracker configuration",
 	"MOTIONTRACKER.configHint": "The motion trackers tracks the relative visible tokens from the selected token.",
@@ -18,6 +20,8 @@
 	"MOTIONTRACKER.themeHint": "Will change appareance of the motion tracker",
 	"MOTIONTRACKER.enablePostProcessTitle": "Enable Post Process animation effects",
 	"MOTIONTRACKER.enablePostProcessHint": "If unchecked it will disable some unnerving animations like a glitch for example",
+	"MOTIONTRACKER.statusesTitle": "Statuses settings",
+	"MOTIONTRACKER.statusesHint": "Tokens having at least one of the orange or green statuses will not show up on your Motion Tracker (orange cannot be changed)",
 	"MOTIONTRACKER.settingsAudio": "Audio",
 	"MOTIONTRACKER.defaultMutedTitle": "Mute by default?",
 	"MOTIONTRACKER.defaultMutedHint": "Will default mute the Motion Tracker, so that there will be no sound at all until activated",
@@ -45,5 +49,6 @@
 	"MOTIONTRACKER.MotionTrackerDialogTitle": "Motion Tracker",
 	"MOTIONTRACKER.Reset": "Reset",
 	"MOTIONTRACKER.Save": "Save",
-	"MOTIONTRACKER.showToAll": "Show to all players"
+	"MOTIONTRACKER.showToAll": "Show to all players",
+	"MotionTracker.motionless": "Motionless"
 }

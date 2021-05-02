@@ -161,6 +161,14 @@ export class MotionTrackerDevice
 	static SCREEN_ADDITIONAL_CANVAS_HEIGHT = 64./1024;
 	static BACKGROUND_MT_PADDING_SCALE_TOTAL = 0.125;
 
+	static STATUS_MOTIONLESS = {
+		id: 'MotionTracker.motionless',
+		label: 'MotionTracker.motionless',
+		icon: 'modules/motion_tracker/textures/motion_tracker_status_ico.webp'
+	};
+
+	static STATUS_MANDATORY = [MotionTrackerDevice.STATUS_MOTIONLESS.id, CONFIG.Combat.defeatedStatusId];
+
 	static THEME_LIST = ['M314', 'Arious'];
 	static THEMES_DATA =
 	{
@@ -418,9 +426,10 @@ export class MotionTrackerDevice
 		const bSeePlayers = game.settings.get(settings.REGISTER_CODE,'seePlayers');
 		const distanceMax = game.settings.get(settings.REGISTER_CODE,'maxDistance');
 		const SIZE = game.settings.get(settings.REGISTER_CODE,'size');
+		const settingsData = MotionTracker.ALL_CONFIG();
 		this.distUnitPerPx = SIZE*.5/distanceMax;
 		MotionTrackerDevice.uniformsPing.distmax = distanceMax;
-		const immobileStatuses = [CONFIG.Combat.defeatedStatusId, 'unconscious', 'sleep', 'stun', 'paralysis', 'restrain', 'prone']
+		const immobileStatuses = [...new Set([...MotionTrackerDevice.STATUS_MANDATORY, ...settingsData.statusFilters])];
 		const pos = computeTokenCenter(this.tokenReference);
 		let nearestDist = distanceMax;
 		let playerIds = [];
@@ -444,7 +453,7 @@ export class MotionTrackerDevice
 				if(immobile===undefined)
 					immobile = actor.effects.find(e=> immobileStatuses.some(s=>s===e.data.flags.core.statusId));
 				let bSkip = bSeePlayers || !bPlayerControlled;
-				if(!immobile && bSkip && token._id!==this.tokenReference._id && !token.hidden)
+				if(!immobile && bSkip && token._id!==this.tokenReference._id)
 				{
 					const oPos = computeTokenCenter(token);
 					oPos.x = (oPos.x-pos.x)/scene.data.grid;
@@ -495,7 +504,6 @@ export class MotionTrackerDevice
 		);
 
 		// deplay sounds by 0.1
-		const settingsData = MotionTracker.ALL_CONFIG();
 		if(!this.bMute)
 		{
 			if(x>0.1 && x<0.2 && this.sound_wave===null)

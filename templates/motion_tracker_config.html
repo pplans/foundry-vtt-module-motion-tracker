@@ -1,4 +1,4 @@
-<form autocomplete="off" class="dice-so-nice flexcol">
+<form autocomplete="off" class="motion-tracker flexcol">
     <nav class="sheet-tabs tabs">
         <a class="item active" data-tab="general"><i class="fas motion-tracker-ico"></i> {{localize "MOTIONTRACKER.settingsGeneral"}}</a>
         <a class="item" data-tab="audio"><i class="fas motion-tracker-options-unmute-32px-ico"></i> {{localize "MOTIONTRACKER.settingsAudio"}}</a>
@@ -30,6 +30,20 @@
                 </div>
                 <p class="notes">{{localize "MOTIONTRACKER.enablePostProcessHint"}}</p>
             </div>
+            {{#if isGM}}
+            <div class="form-group">
+                <div>
+                    <label>{{localize "MOTIONTRACKER.statusesTitle"}}</label>
+                    <p class="notes">{{localize "MOTIONTRACKER.statusesHint"}}</p>
+                </div>
+                <div class="form-fields status-container">
+                    {{#each statusFiltersExt as |status key|}}
+                        <a class="status-item {{status.status}}" title="{{status.label}}"><img src="{{status.icon}}"/></a>
+                        <input type="hidden" name="statusFilters[{{status.id}}]" data-target="statusFilters[{{status.id}}]" value="{{status.status}}"/>
+                    {{/each}}
+                </div>
+            </div>
+            {{/if}}
         </div>
         <div class="tab" data-tab="audio">
             <div class="form-group">

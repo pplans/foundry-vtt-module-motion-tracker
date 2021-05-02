@@ -54,7 +54,9 @@ Hooks.on('init', ()=>
 
 Hooks.on('ready', ()=>
 {
-	console.log("Motion Tracker Module 'ready' hook");
+	console.log('Motion Tracker Module <ready> hook');
+	
+	CONFIG.statusEffects.push(MotionTrackerDevice.STATUS_MOTIONLESS);
 });
 
 Hooks.on('updatePlayer', () =>
@@ -76,6 +78,7 @@ Hooks.on('updatePlayer', () =>
 			sounds: true,
 			soundsVolume: 0.5,
 			useHighDPI:true,
+			statusFilters: ['unconscious', 'sleep', 'stun', 'paralysis', 'restrain', 'prone'],
 			general:
 			{
 				speed: MotionTrackerDevice.TRACK_SPEED,
@@ -206,6 +209,18 @@ Hooks.on('updatePlayer', () =>
 				});
 			}
 			game.user.setFlag(settings.REGISTER_CODE,'welcomeMessageShown',true);
+		}
+		if(!game.user.getFlag(settings.REGISTER_CODE, settings.VERSION))
+		{
+			renderTemplate("modules/motion_tracker/templates/updateMessage.html", {}).then((html)=>
+			{
+				let options = {
+					whisper:[game.user.id],
+					content: html
+				};
+				ChatMessage.create(options);
+			});
+			game.user.setFlag(settings.REGISTER_CODE,settings.VERSION,true);
 		}
 	}
     
