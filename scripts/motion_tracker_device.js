@@ -223,12 +223,11 @@ export class MotionTrackerDevice
 
 		this.soundBank = {};
 		this.sound_wave = null;
-		const conf = game.settings.get(settings.REGISTER_CODE,'settings');
+		const conf = MotionTracker.ALL_CONFIG();
 		this.volume = conf.audio.volume;
 		this.bMute = conf.audio.muted;
 		// Renderer specific
-		const settingsData = game.settings.get(settings.REGISTER_CODE, 'settings');
-		const configTheme = MotionTrackerDevice.THEMES_DATA[settingsData.general.theme];
+		const configTheme = MotionTrackerDevice.THEMES_DATA[conf.general.theme];
 		this.pixi = {
 			app: null,
 			sprite_background: null,
@@ -259,8 +258,8 @@ export class MotionTrackerDevice
 
 	preloadSounds()
 	{
-		const settingsData = game.settings.get(settings.REGISTER_CODE, 'settings');
-		let foundsounds = [settingsData.audio.wave.src, settingsData.audio.close.src, settingsData.audio.medium.src, settingsData.audio.far.src];
+		const conf = MotionTracker.ALL_CONFIG();
+		let foundsounds = [conf.audio.wave.src, conf.audio.close.src, conf.audio.medium.src, conf.audio.far.src];
 		foundsounds.forEach(v => 
 		{
 			let path = v;
@@ -294,16 +293,16 @@ export class MotionTrackerDevice
 		const distanceMax = game.settings.get(settings.REGISTER_CODE,'maxDistance');
 		this.distUnitPerPx = SIZE*.5/distanceMax;
 		
-		const settingsData = game.settings.get(settings.REGISTER_CODE, 'settings');
+		const conf = MotionTracker.ALL_CONFIG();
 
-		const configTheme = MotionTrackerDevice.THEMES_DATA[settingsData.general.theme];
+		const configTheme = MotionTrackerDevice.THEMES_DATA[conf.general.theme];
 
 		//Create the `cat` sprite
-		PIXI.utils.TextureCache[this.textures.background[settingsData.general.theme]].baseTexture.alphaMode = PIXI.ALPHA_MODES.NO_PREMULTIPLIED_ALPHA;
-		PIXI.utils.TextureCache[this.textures.background[settingsData.general.theme]].baseTexture.update();
+		PIXI.utils.TextureCache[this.textures.background[conf.general.theme]].baseTexture.alphaMode = PIXI.ALPHA_MODES.NO_PREMULTIPLIED_ALPHA;
+		PIXI.utils.TextureCache[this.textures.background[conf.general.theme]].baseTexture.update();
 		if(this.pixi.sprite_background===null)
 		{
-			MotionTrackerDevice.uniformsBackground.uSampler = PIXI.utils.TextureCache[this.textures.background[settingsData.general.theme]];
+			MotionTrackerDevice.uniformsBackground.uSampler = PIXI.utils.TextureCache[this.textures.background[conf.general.theme]];
 			const backgroundShdr = PIXI.Shader.from(null, configTheme.shaders.background, MotionTrackerDevice.uniformsBackground);
 			const QuadGeometry = new PIXI.Geometry()
 			    .addAttribute('aVertexPosition', // the attribute name
@@ -426,10 +425,10 @@ export class MotionTrackerDevice
 		const bSeePlayers = game.settings.get(settings.REGISTER_CODE,'seePlayers');
 		const distanceMax = game.settings.get(settings.REGISTER_CODE,'maxDistance');
 		const SIZE = game.settings.get(settings.REGISTER_CODE,'size');
-		const settingsData = MotionTracker.ALL_CONFIG();
+		const conf = MotionTracker.ALL_CONFIG();
 		this.distUnitPerPx = SIZE*.5/distanceMax;
 		MotionTrackerDevice.uniformsPing.distmax = distanceMax;
-		const immobileStatuses = [...new Set([...MotionTrackerDevice.STATUS_MANDATORY, ...settingsData.statusFilters])];
+		const immobileStatuses = [...new Set([...MotionTrackerDevice.STATUS_MANDATORY, ...conf.statusFilters])];
 		const pos = computeTokenCenter(this.tokenReference);
 		let nearestDist = distanceMax;
 		let playerIds = [];
@@ -479,8 +478,7 @@ export class MotionTrackerDevice
 		}
 		
 		{
-			const settingsData = game.settings.get(settings.REGISTER_CODE, 'settings');
-			const configTheme = MotionTrackerDevice.THEMES_DATA[settingsData.general.theme];
+			const configTheme = MotionTrackerDevice.THEMES_DATA[conf.general.theme];
 			
 			if(configTheme.textPosition==='bottom-center')
 			{
@@ -508,7 +506,7 @@ export class MotionTrackerDevice
 		{
 			if(x>0.1 && x<0.2 && this.sound_wave===null)
 			{
-				this.sound_wave = AudioHelper.play({src: settingsData.audio.wave.src, volume: settingsData.audio.wave.volume*this.volume}, false);
+				this.sound_wave = AudioHelper.play({src: conf.audio.wave.src, volume: conf.audio.wave.volume*this.volume}, false);
 			}
 			else if(x>0.2)
 			{
@@ -516,13 +514,13 @@ export class MotionTrackerDevice
 			}
 			if(x*distanceMax>nearestDist && this.sound_ping===null)
 			{
-				let sound = settingsData.audio.far;
+				let sound = conf.audio.far;
 				if(nearestDist<0.33*distanceMax)
-					sound = settingsData.audio.close;
+					sound = conf.audio.close;
 				else if(nearestDist<0.66*distanceMax)
-					sound = settingsData.audio.medium;
+					sound = conf.audio.medium;
 				else
-					sound = settingsData.audio.far;
+					sound = conf.audio.far;
 				this.sound_ping = AudioHelper.play({src: sound.src, volume: sound.volume*this.volume}, false);
 			}
 			else if(x*distanceMax<nearestDist)
@@ -543,7 +541,7 @@ export class MotionTrackerDevice
 		}
 
 		MotionTrackerDevice.uniformsBackground.time += delta;
-		MotionTrackerDevice.uniformsBackground.speed = settingsData.general.speed;
+		MotionTrackerDevice.uniformsBackground.speed = conf.general.speed;
 		MotionTrackerDevice.uniformsBackground.centerx = centerCanvas.x;
 		MotionTrackerDevice.uniformsBackground.centery = centerCanvas.y;
 		MotionTrackerDevice.uniformsBackground.ratio = MotionTrackerDevice.RATIO;
@@ -551,10 +549,10 @@ export class MotionTrackerDevice
 		MotionTrackerDevice.uniformsPing.speed = MotionTrackerDevice.uniformsBackground.speed;
 		MotionTrackerDevice.uniformsPing.centerx = centerCanvas.x;
 		MotionTrackerDevice.uniformsPing.centery = centerCanvas.y*MotionTrackerDevice.uniformsBackground.ratio;
-		MotionTrackerDevice.uniformsPing.emissive = MotionTrackerDevice.THEMES_DATA[settingsData.general.theme].emissive;
+		MotionTrackerDevice.uniformsPing.emissive = MotionTrackerDevice.THEMES_DATA[conf.general.theme].emissive;
 		MotionTrackerDevice.uniformPostProcess.time += delta;
 		MotionTrackerDevice.uniformPostProcess.ratio = MotionTrackerDevice.uniformsBackground.ratio;
-		MotionTrackerDevice.uniformPostProcess.scaleGlitch = settingsData.rendering.enablePostProcess?1.:0.;
+		MotionTrackerDevice.uniformPostProcess.scaleGlitch = conf.rendering.enablePostProcess?1.:0.;
 	}
 
 	setData(user = game.user, tokenId, viewedSceneId)
