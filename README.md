@@ -16,6 +16,9 @@ When hitted, the button will scan for the nearest active and visibles tokens bas
 * Audio is supported now, it uses 4 clips of 1 second
 * All clips are configurable through the module options
 
+## v0.5.1
+* Quickfix : error when new settings aren't set
+
 ## v0.5.0
 * Hidden token does not count anymore for the Motion Tracker filtering, you now have to use the statuses
 * Added a configuration panel for statuses
