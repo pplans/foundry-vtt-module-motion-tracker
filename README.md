@@ -16,6 +16,9 @@ When hitted, the button will scan for the nearest active and visibles tokens bas
 * Audio is supported now, it uses 4 clips of 1 second
 * All clips are configurable through the module options
 
+## v0.5.2
+* Added ES language by KaWeNGoD
+
 ## v0.5.1
 * Quickfix : error when new settings aren't set
 
@@ -93,5 +96,6 @@ Otakode - some indirect ideas and his feedbacks
 Freki - pushing me around to make this happen and giving me a lot of ideas and feedbacks
 Sasmira - a lot of feedbacks and contradictory ideas that are valued
 Minarkhaios - fadeout
+KaWeNGoD - for the spanish localization
 Foundry community, specially Alien RPG one
 Some parts of the code may resemble to dice-so-nice sources, this project is actually based on dice-so-nice and tends to get as far as possible to it with time
