@@ -16,6 +16,9 @@ When hitted, the button will scan for the nearest active and visibles tokens bas
 * Audio is supported now, it uses 4 clips of 1 second
 * All clips are configurable through the module options
 
+## v0.5.3
+* Fix ES language not in the module.json
+
 ## v0.5.2
 * Added ES language by KaWeNGoD
 
