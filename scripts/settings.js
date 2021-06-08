@@ -127,7 +127,7 @@ class MotionTrackerConfig extends FormApplication
 				status: MotionTrackerDevice.STATUS_MANDATORY.find(id=> id===s.id)?'mandatory':(data.statusFilters.find(id => id===s.id)!==undefined?'selected':'')
 			});
 		});
-		data.isGM = game.user.hasRole(USER_ROLES.ASSISTANT);
+		data.isGM = game.user.hasRole(CONST.USER_ROLES.ASSISTANT);
 		data.general.themelist = [];
 		MotionTrackerDevice.THEME_LIST.forEach(t => data.general.themelist.push({value: t, selected:t===data.general.theme?'selected':''}));
 		return data;

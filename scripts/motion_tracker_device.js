@@ -262,12 +262,8 @@ export class MotionTrackerDevice
 		let foundsounds = [conf.audio.wave.src, conf.audio.close.src, conf.audio.medium.src, conf.audio.far.src];
 		foundsounds.forEach(v => 
 		{
-			let path = v;
-			AudioHelper.play({
-				src: path,
-				autoplay: false
-			}, false);
-			this.soundBank[v] = path;
+			this.soundBank[v] = new Sound(v);
+			this.soundBank[v].load();
 		});
 	}
 
@@ -415,8 +411,8 @@ export class MotionTrackerDevice
 		function computeTokenCenter(token)
 		{
 			return {
-				x:0.5*token.scale*token.width+token.x,
-				y:0.5*token.scale*token.height+token.y
+				x:0.5*token.data.scale*token.data.width+token.data.x,
+				y:0.5*token.data.scale*token.data.height+token.data.y
 			};
 		}
 
@@ -435,12 +431,12 @@ export class MotionTrackerDevice
 		for(let i = 0;i<game.users._source.length;++i)
 		{
 			if(game.users._source[i].role<4)
-				playerIds.push(game.users._source[i]._id);
+				playerIds.push(game.users._source[i].id);
 		}
 		tokens.forEach(token => 
 			{
 				let immobile = token.actorData?.effects?.find(e => immobileStatuses.some(s=>s===e.flags.core.statusId));
-				let actor = game.actors.get(token.actorId);
+				let actor = token.actor;
 				let bPlayerControlled = false;
 				if(actor!==null)
 				{
@@ -452,7 +448,7 @@ export class MotionTrackerDevice
 				if(immobile===undefined)
 					immobile = actor.effects.find(e=> immobileStatuses.some(s=>s===e.data.flags.core.statusId));
 				let bSkip = bSeePlayers || !bPlayerControlled;
-				if(!immobile && bSkip && token._id!==this.tokenReference._id)
+				if(!immobile && bSkip && token.id!==this.tokenReference.id)
 				{
 					const oPos = computeTokenCenter(token);
 					oPos.x = (oPos.x-pos.x)/scene.data.grid;
@@ -506,7 +502,7 @@ export class MotionTrackerDevice
 		{
 			if(x>0.1 && x<0.2 && this.sound_wave===null)
 			{
-				this.sound_wave = AudioHelper.play({src: conf.audio.wave.src, volume: conf.audio.wave.volume*this.volume}, false);
+				this.sound_wave = this.soundBank[conf.audio.wave.src].play({offset:0, volume: conf.audio.wave.volume*this.volume});
 			}
 			else if(x>0.2)
 			{
@@ -521,7 +517,7 @@ export class MotionTrackerDevice
 					sound = conf.audio.medium;
 				else
 					sound = conf.audio.far;
-				this.sound_ping = AudioHelper.play({src: sound.src, volume: sound.volume*this.volume}, false);
+				this.sound_ping = this.soundBank[sound.src].play({offset:0, volume: sound.volume*this.volume});
 			}
 			else if(x*distanceMax<nearestDist)
 			{
@@ -564,8 +560,8 @@ export class MotionTrackerDevice
 		if(scene!==null && scene!==undefined)
 		{
 			const tokens = scene.data.tokens;
-			if(tokens.length>0)
-				this.tokenReference = tokens.find(tok => tok._id === tokenId);
+			if(tokens.size>0)
+				this.tokenReference = tokens.find(tok => tok.id === tokenId);
 		}
 	}
 

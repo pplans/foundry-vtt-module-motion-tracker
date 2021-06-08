@@ -163,26 +163,26 @@ Hooks.on('updatePlayer', () =>
 	{
 		game.socket.on('module.motion_tracker', (request) =>
 		{
-			if(game.user.hasRole(USER_ROLES.ASSISTANT))
+			if(game.user.hasRole(CONST.USER_ROLES.ASSISTANT))
 			{
 				this.window.recvCommand(request);
 			}
-			if(request.notify!=='notify' && request.senderId!==game.user.data._id)
+			if(request.notify!=='notify' && request.senderId!==game.user.data.id)
 			{
 				switch(request.type)
 				{
 					case 'init':
 						const owner = game.users.get(request.ownerId);
-						if(request.ownerId!==game.user.data._id && owner.data.role<game.user.role && game.user.hasRole(USER_ROLES.ASSISTANT))
+						if(request.ownerId!==game.user.data.id && owner.data.role<game.user.role && game.user.hasRole(CONST.USER_ROLES.ASSISTANT))
 							this.open(request.user, request.ownerId, request.tokenReferenceId, request.viewedSceneId);
 					break;
 					case 'open':
-						if((request.targetId===null || request.targetId===game.user.data._id))
+						if((request.targetId===null || request.targetId===game.user.data.id))
 							this.open(request.user, request.ownerId, request.tokenReferenceId, request.viewedSceneId);
 					break;
 					case 'close':
 						const sender = game.users.get(request.senderId);
-						if((request.targetId===null || request.targetId===game.user.data._id) && sender.data.role>=game.user.role)
+						if((request.targetId===null || request.targetId===game.user.data.id) && sender.data.role>=game.user.role)
 							this.closeAndNotify();
 					break;
 				}
@@ -261,7 +261,7 @@ Hooks.on('updatePlayer', () =>
 	async open(user = game.user, ownerId = game.user.id, tokenId = null, viewedScene = game.user.viewedScene)
 	{
 		if(tokenId === null && canvas.tokens.controlled.length>0)
-			tokenId = canvas.tokens.controlled[0].data._id;
+			tokenId = canvas.tokens.controlled[0].data.document.id;
 		this.window.setData(user, ownerId, tokenId, viewedScene);
 		await this.window.render(true);
 		return new Promise((resolve, reject) =>
@@ -288,7 +288,7 @@ Hooks.on('updatePlayer', () =>
 	toggle()
 	{
 		if(this.window.rendered)
-			this.close(game.user.data._id);
+			this.close(game.user.data.id);
 		else
 			this.open();
 		return this.window.rendered===null;
@@ -343,7 +343,7 @@ class MotionTrackerWindow extends Application
 	renderPlayerList()
 	{
 		let jqPlayerList = this.element.find('#motion-tracker-options-player-list');
-		if(game.user.hasRole(USER_ROLES.ASSISTANT) && jqPlayerList.length>0)
+		if(game.user.hasRole(CONST.USER_ROLES.ASSISTANT) && jqPlayerList.length>0)
 		{
 			jqPlayerList.empty();
 			let playerList = jqPlayerList[0];
@@ -367,9 +367,9 @@ class MotionTrackerWindow extends Application
 					let playerItem = document.createElement('div');
 					let playerItemLink = document.createElement('a');
 					let playerItemIco = document.createElement('i');
-					playerItemIco.id = 'motion-tracker-visibility-'+u.data._id;
-					playerItemIco.className='fas '+(this.playerVisibility[u.data._id]==='open'?'motion-tracker-hide-ico':'motion-tracker-show-ico');
-					if(u.data._id==this.ownerId)
+					playerItemIco.id = 'motion-tracker-visibility-'+u.data.id;
+					playerItemIco.className='fas '+(this.playerVisibility[u.data.id]==='open'?'motion-tracker-hide-ico':'motion-tracker-show-ico');
+					if(u.data.id==this.ownerId)
 					{
 						playerItemLink.className += 'motion-tracker-owner';
 						playerItemLink.style.color = u.data.color;
@@ -380,7 +380,7 @@ class MotionTrackerWindow extends Application
 						playerItemLink.style.color = '#888888';
 						playerItemLink.style.textDecoration = 'line-through';
 					}
-					playerItemLink.onclick = e=> { this.sendCommand(u.data._id, this.playerVisibility[u.data._id]==='open'?'close':'open'); };
+					playerItemLink.onclick = e=> { this.sendCommand(u.data.id, this.playerVisibility[u.data.id]==='open'?'close':'open'); };
 					playerItemLink.appendChild(playerItemIco);
 					playerItemLink.appendChild(document.createTextNode(u.data.name));
 					playerItem.appendChild(playerItemLink);
@@ -423,11 +423,11 @@ class MotionTrackerWindow extends Application
 		this.device = new MotionTrackerDevice(this.canvas, this.deviceIsReady.bind(this), config);
 		this.device.setData(this.user, this.tokenId, this.viewedSceneId);
 
-		if(this.ownerId===game.user.data._id)
+		if(this.ownerId===game.user.data.id)
 		{
 			this.sendCommand(null, 'init');
 		}
-		this.sendCommand(game.user.data._id, 'open', 'notify');
+		this.sendCommand(game.user.data.id, 'open', 'notify');
 	}
 
 	windowResetStyle()
@@ -499,21 +499,21 @@ class MotionTrackerWindow extends Application
 				if(u.active)
 				{
 					let type = request.type;
-					if(type==='init' && u.hasRole(USER_ROLES.ASSISTANT))
+					if(type==='init' && u.hasRole(CONST.USER_ROLES.ASSISTANT))
 						type='open';
 					else if(type==='init')
 						type = 'close';
-					this.playerVisibility[u.data._id] = type;
+					this.playerVisibility[u.data.id] = type;
 					const classRemoved = type==='open'?'motion-tracker-show-ico':'motion-tracker-hide-ico';
 					const classAdded = type==='open'?'motion-tracker-hide-ico':'motion-tracker-show-ico';
-					this.element.find('#motion-tracker-visibility-'+u.data._id).addClass(classAdded).removeClass(classRemoved);
+					this.element.find('#motion-tracker-visibility-'+u.data.id).addClass(classAdded).removeClass(classRemoved);
 				}
 				else
 				{
-					this.playerVisibility[u.data._id] = 'close';
+					this.playerVisibility[u.data.id] = 'close';
 					const classRemoved = 'motion-tracker-hide-ico';
 					const classAdded = 'motion-tracker-show-ico';
-					this.element.find('#motion-tracker-visibility-'+u.data._id).addClass(classAdded).removeClass(classRemoved);
+					this.element.find('#motion-tracker-visibility-'+u.data.id).addClass(classAdded).removeClass(classRemoved);
 				}
 			});
 		}
@@ -546,7 +546,7 @@ class MotionTrackerWindow extends Application
 			tokenReferenceId: this.tokenId,
 			viewedSceneId: this.viewedScene,
 			targetId: target,
-			senderId: game.user.data._id,
+			senderId: game.user.data.id,
 			notify: notify
 		});
 	}
@@ -582,7 +582,7 @@ class MotionTrackerWindow extends Application
 	close(options)
 	{
 		const owner = game.users.get(this.ownerId);
-		if(this.ownerId===game.user.data._id || owner.data.role<game.user.role && game.user.hasRole(USER_ROLES.ASSISTANT))
+		if(this.ownerId===game.user.data.id || owner.data.role<game.user.role && game.user.hasRole(CONST.USER_ROLES.ASSISTANT))
 		{
 			this.sendCommand(null, 'close');
 		}
