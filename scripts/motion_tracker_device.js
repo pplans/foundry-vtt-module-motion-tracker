@@ -262,12 +262,8 @@ export class MotionTrackerDevice
 		let foundsounds = [conf.audio.wave.src, conf.audio.close.src, conf.audio.medium.src, conf.audio.far.src];
 		foundsounds.forEach(v => 
 		{
-			let path = v;
-			AudioHelper.play({
-				src: path,
-				autoplay: false
-			}, false);
-			this.soundBank[v] = path;
+			this.soundBank[v] = new Sound(v);
+			this.soundBank[v].load();
 		});
 	}
 
@@ -506,7 +502,7 @@ export class MotionTrackerDevice
 		{
 			if(x>0.1 && x<0.2 && this.sound_wave===null)
 			{
-				this.sound_wave = AudioHelper.play({src: conf.audio.wave.src, volume: conf.audio.wave.volume*this.volume}, false);
+				this.sound_wave = this.soundBank[conf.audio.wave.src].play({offset:0, volume: conf.audio.wave.volume*this.volume});
 			}
 			else if(x>0.2)
 			{
@@ -521,7 +517,7 @@ export class MotionTrackerDevice
 					sound = conf.audio.medium;
 				else
 					sound = conf.audio.far;
-				this.sound_ping = AudioHelper.play({src: sound.src, volume: sound.volume*this.volume}, false);
+				this.sound_ping = this.soundBank[sound.src].play({offset:0, volume: sound.volume*this.volume});
 			}
 			else if(x*distanceMax<nearestDist)
 			{

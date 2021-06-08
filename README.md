@@ -16,6 +16,9 @@ When hitted, the button will scan for the nearest active and visibles tokens bas
 * Audio is supported now, it uses 4 clips of 1 second
 * All clips are configurable through the module options
 
+## v0.5.5
+* Migration to 8.x foundry series, audio
+
 ## v0.5.4
 * Migration to 8.x foundry series, first step
 
