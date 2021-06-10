@@ -17,6 +17,11 @@ export function renderMotionTrackerIcon()
 	}
 }
 
+function getUserDataId(_data)
+{
+	return _data._id;
+}
+
 Hooks.on('init', ()=>
 {
 	// set up the mutation observer
@@ -167,22 +172,22 @@ Hooks.on('updatePlayer', () =>
 			{
 				this.window.recvCommand(request);
 			}
-			if(request.notify!=='notify' && request.senderId!==game.user.data.id)
+			if(request.notify!=='notify' && request.senderId!==game.user.id)
 			{
 				switch(request.type)
 				{
 					case 'init':
 						const owner = game.users.get(request.ownerId);
-						if(request.ownerId!==game.user.data.id && owner.data.role<game.user.role && game.user.hasRole(CONST.USER_ROLES.ASSISTANT))
+						if(request.ownerId!==game.user.id && owner.data.role<game.user.role && game.user.hasRole(CONST.USER_ROLES.ASSISTANT))
 							this.open(request.user, request.ownerId, request.tokenReferenceId, request.viewedSceneId);
 					break;
 					case 'open':
-						if((request.targetId===null || request.targetId===game.user.data.id))
+						if((request.targetId===null || request.targetId===game.user.id))
 							this.open(request.user, request.ownerId, request.tokenReferenceId, request.viewedSceneId);
 					break;
 					case 'close':
 						const sender = game.users.get(request.senderId);
-						if((request.targetId===null || request.targetId===game.user.data.id) && sender.data.role>=game.user.role)
+						if((request.targetId===null || request.targetId===game.user.id) && sender.data.role>=game.user.role)
 							this.closeAndNotify();
 					break;
 				}
@@ -288,7 +293,7 @@ Hooks.on('updatePlayer', () =>
 	toggle()
 	{
 		if(this.window.rendered)
-			this.close(game.user.data.id);
+			this.close(game.user.id);
 		else
 			this.open();
 		return this.window.rendered===null;
@@ -367,8 +372,8 @@ class MotionTrackerWindow extends Application
 					let playerItem = document.createElement('div');
 					let playerItemLink = document.createElement('a');
 					let playerItemIco = document.createElement('i');
-					playerItemIco.id = 'motion-tracker-visibility-'+u.data.id;
-					playerItemIco.className='fas '+(this.playerVisibility[u.data.id]==='open'?'motion-tracker-hide-ico':'motion-tracker-show-ico');
+					playerItemIco.id = 'motion-tracker-visibility-'+u.id;
+					playerItemIco.className='fas '+(this.playerVisibility[u.id]==='open'?'motion-tracker-hide-ico':'motion-tracker-show-ico');
 					if(u.data.id==this.ownerId)
 					{
 						playerItemLink.className += 'motion-tracker-owner';
@@ -380,7 +385,7 @@ class MotionTrackerWindow extends Application
 						playerItemLink.style.color = '#888888';
 						playerItemLink.style.textDecoration = 'line-through';
 					}
-					playerItemLink.onclick = e=> { this.sendCommand(u.data.id, this.playerVisibility[u.data.id]==='open'?'close':'open'); };
+					playerItemLink.onclick = e=> { this.sendCommand(u.id, this.playerVisibility[u.id]==='open'?'close':'open'); };
 					playerItemLink.appendChild(playerItemIco);
 					playerItemLink.appendChild(document.createTextNode(u.data.name));
 					playerItem.appendChild(playerItemLink);
@@ -423,11 +428,11 @@ class MotionTrackerWindow extends Application
 		this.device = new MotionTrackerDevice(this.canvas, this.deviceIsReady.bind(this), config);
 		this.device.setData(this.user, this.tokenId, this.viewedSceneId);
 
-		if(this.ownerId===game.user.data.id)
+		if(this.ownerId===game.user.id)
 		{
 			this.sendCommand(null, 'init');
 		}
-		this.sendCommand(game.user.data.id, 'open', 'notify');
+		this.sendCommand(game.user.id, 'open', 'notify');
 	}
 
 	windowResetStyle()
@@ -546,7 +551,7 @@ class MotionTrackerWindow extends Application
 			tokenReferenceId: this.tokenId,
 			viewedSceneId: this.viewedScene,
 			targetId: target,
-			senderId: game.user.data.id,
+			senderId: game.user.id,
 			notify: notify
 		});
 	}
@@ -582,7 +587,7 @@ class MotionTrackerWindow extends Application
 	close(options)
 	{
 		const owner = game.users.get(this.ownerId);
-		if(this.ownerId===game.user.data.id || owner.data.role<game.user.role && game.user.hasRole(CONST.USER_ROLES.ASSISTANT))
+		if(this.ownerId===game.user.id || owner.data.role<game.user.role && game.user.hasRole(CONST.USER_ROLES.ASSISTANT))
 		{
 			this.sendCommand(null, 'close');
 		}

@@ -16,6 +16,10 @@ When hitted, the button will scan for the nearest active and visibles tokens bas
 * Audio is supported now, it uses 4 clips of 1 second
 * All clips are configurable through the module options
 
+## v0.5.6
+* Fix Motion Tracker not shareable anymore with players
+* Fix scan players option
+
 ## v0.5.5
 * Migration to 8.x foundry series, audio
 
