@@ -16,6 +16,9 @@ When hitted, the button will scan for the nearest active and visibles tokens bas
 * Audio is supported now, it uses 4 clips of 1 second
 * All clips are configurable through the module options
 
+## v0.5.7
+* Fix Exception if token has a broken actor
+
 ## v0.5.6
 * Fix Motion Tracker not shareable anymore with players
 * Fix scan players option
