@@ -20,6 +20,11 @@
 		"lang": "es",
 		"name": "Español",
 		"path": "lang/en.json"
+	},
+    {
+		"lang": "fr",
+		"name": "Français",
+		"path": "lang/fr.json"
 	}],
   "dependencies": [],
   "authors": [
