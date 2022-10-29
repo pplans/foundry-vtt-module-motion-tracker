@@ -223,6 +223,7 @@ export class MotionTrackerDevice
 
 		this.soundBank = {};
 		this.sound_wave = null;
+		this.sound_ping = null;
 		const conf = MotionTracker.ALL_CONFIG();
 		this.volume = conf.audio.volume;
 		this.bMute = conf.audio.muted;
@@ -411,8 +412,8 @@ export class MotionTrackerDevice
 		function computeTokenCenter(token)
 		{
 			return {
-				x:0.5*token.data.scale*token.data.width+token.data.x,
-				y:0.5*token.data.scale*token.data.height+token.data.y
+				x:0.5*token.width+token.x,
+				y:0.5*token.height+token.y
 			};
 		}
 
@@ -435,7 +436,7 @@ export class MotionTrackerDevice
 		}
 		tokens.forEach(token => 
 			{
-				let immobile = token.actorData?.effects?.find(e => immobileStatuses.some(s=>s===e.flags.core.statusId));
+				let immobile = token.data?.effects?.find(e => immobileStatuses.some(s=>s===e.flags.core.statusId));
 				let actor = token.actor;
 				let bPlayerControlled = false;
 				if(actor!==null)
@@ -453,8 +454,8 @@ export class MotionTrackerDevice
 				)
 				{
 					const oPos = computeTokenCenter(token);
-					oPos.x = (oPos.x-pos.x)/scene.data.grid;
-					oPos.y = (oPos.y-pos.y)/scene.data.grid;
+					oPos.x = (oPos.x-pos.x)/scene.data.grid.size;
+					oPos.y = (oPos.y-pos.y)/scene.data.grid.size;
 					const normDir = (Math.abs(oPos.x)<0.01 && Math.abs(oPos.y)<0.01)?0.01:Math.sqrt(oPos.x*oPos.x+oPos.y*oPos.y);
 					let scanResult = { distance: scene.data.gridDistance*normDir, dir: { x: oPos.x/normDir, y: oPos.y/normDir } };
 					nearestDist = Math.min(nearestDist, scanResult.distance);
@@ -504,7 +505,18 @@ export class MotionTrackerDevice
 		{
 			if(x>0.1 && x<0.2 && this.sound_wave===null)
 			{
-				this.sound_wave = this.soundBank[conf.audio.wave.src].play({offset:0, volume: conf.audio.wave.volume*this.volume});
+				let soundObj = this.soundBank[conf.audio.wave.src];
+				if(!soundObj.loaded)
+					soundObj.load();
+				if(soundObj.playing)
+					soundObj.stop();
+				this.sound_wave = soundObj.play(
+					{
+						offset:0,
+						volume: conf.audio.wave.volume*this.volume,
+						fade: 0.1
+					}
+				);
 			}
 			else if(x>0.2)
 			{
@@ -519,7 +531,18 @@ export class MotionTrackerDevice
 					sound = conf.audio.medium;
 				else
 					sound = conf.audio.far;
-				this.sound_ping = this.soundBank[sound.src].play({offset:0, volume: sound.volume*this.volume});
+				let soundObj = this.soundBank[sound.src];
+				if(!soundObj.loaded)
+					soundObj.load();
+				if(soundObj.playing)
+				soundObj.stop();
+				this.sound_ping = soundObj.play(
+					{
+						offset:0,
+						volume: sound.volume*this.volume,
+						fade: 0.1
+					}
+				);
 			}
 			else if(x*distanceMax<nearestDist)
 			{
@@ -563,7 +586,7 @@ export class MotionTrackerDevice
 		{
 			const tokens = scene.data.tokens;
 			if(tokens.size>0)
-				this.tokenReference = tokens.find(tok => tok.id === tokenId);
+				this.tokenReference = tokens.find(tok => tok.actorId === tokenId);
 		}
 	}
 

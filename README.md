@@ -16,6 +16,12 @@ When hitted, the button will scan for the nearest active and visibles tokens bas
 * Audio is supported now, it uses 4 clips of 1 second
 * All clips are configurable through the module options
 
+# Changelog
+
+## v1.0.0
+* Support of Foundry VTT v10
+* Disabled audio by default because of v10 sound API issue unloading an audio once it stops
+
 ## v0.5.8
 * Added french localization (by JNQ)
 * Increased max scan speed from 0.01 to 0.1 as per issue https://github.com/pplans/foundry-vtt-module-motion-tracker/issues/43

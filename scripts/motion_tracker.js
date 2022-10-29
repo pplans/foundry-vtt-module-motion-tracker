@@ -95,7 +95,7 @@ Hooks.on('updatePlayer', () =>
 			},
 			audio:
 			{
-				muted: false,
+				muted: true,
 				volume: 1.,
 				wave: {volume: 1., src: 'modules/motion_tracker/sounds/motion_tracker_wave.ogg'},
 				close: {volume: 1., src: 'modules/motion_tracker/sounds/motion_tracker_ping_close.ogg'},
@@ -266,7 +266,7 @@ Hooks.on('updatePlayer', () =>
 	async open(user = game.user, ownerId = game.user.id, tokenId = null, viewedScene = game.user.viewedScene)
 	{
 		if(tokenId === null && canvas.tokens.controlled.length>0)
-			tokenId = canvas.tokens.controlled[0].data.document.id;
+			tokenId = canvas.tokens.controlled[0].document.actorId;
 		this.window.setData(user, ownerId, tokenId, viewedScene);
 		await this.window.render(true);
 		return new Promise((resolve, reject) =>
