@@ -221,9 +221,8 @@ export class MotionTrackerDevice
 		MotionTrackerDevice.uniformsPing.distmax = distanceMax;
 		this.distUnitPerPx = SIZE*.5/distanceMax;
 
-		this.soundBank = {};
-		this.sound_wave = null;
-		this.sound_ping = null;
+		this.pingSoundLock = false;
+		this.waveSoundLock = false;
 		const conf = MotionTracker.ALL_CONFIG();
 		this.volume = conf.audio.volume;
 		this.bMute = conf.audio.muted;
@@ -257,34 +256,13 @@ export class MotionTrackerDevice
 		this.loadTextures();
 	}
 
-	preloadSounds()
-	{
-		const conf = MotionTracker.ALL_CONFIG();
-		let foundsounds = [conf.audio.wave.src, conf.audio.close.src, conf.audio.medium.src, conf.audio.far.src];
-		foundsounds.forEach(v => 
-		{
-			this.soundBank[v] = new Sound(v);
-			this.soundBank[v].load();
-		});
-	}
-
 	async loadTextures()
 	{
-		if(MotionTrackerDevice.PIXILoader === null)
-		{
-			// MotionTrackerDevice.PIXILoader =  new PIXI.Loader()
-			await PIXI.Assets.load(this.textures.background.M314);
-			await PIXI.Assets.load(this.textures.background.Arious);
-			await PIXI.Assets.load(this.textures.ping);
-			// const image = Sprite.from(texture);
-			// MotionTrackerDevice.PIXILoader
-			// 	.add([this.textures.background.M314, this.textures.background.Arious, this.textures.ping])
-			// 	.load(this.loadTexturesFinish.bind(this));
-		}
-		else
-		{
-			this.loadTexturesFinish(); // simply apply the end process
-		}
+		// PIXI can handle this being called when textures are already loaded
+		await PIXI.Assets.load(this.textures.background.M314);
+		await PIXI.Assets.load(this.textures.background.Arious);
+		await PIXI.Assets.load(this.textures.ping);
+		this.loadTexturesFinish()
 	}
 
 	async loadTexturesFinish()
@@ -383,8 +361,6 @@ export class MotionTrackerDevice
 		this.pixi.app.stage.addChild(backgroundAndPings);
 		this.pixi.app.stage.addChild(this.pixi.distanceMessage);
 		this.pixi.app.ticker.add(this.update, this);
-		//this.sound_wave = setInterval(() => this.playSound(['modules/motion_tracker/sounds/motion_tracker_wave.wav', 1.]), 100000.*MotionTrackerDevice.TRACK_SPEED);
-		this.preloadSounds();
 		this.cbIsReady();
 	}
 
@@ -440,7 +416,9 @@ export class MotionTrackerDevice
 		}
 		tokens.forEach(token => 
 			{
-				let immobile = token.data?.effects?.find(e => immobileStatuses.some(s=>s===e.flags.core.statusId));
+				if (token.actor.statuses.has("MotionTracker.motionless")) {
+					return
+				}
 				let actor = token.actor;
 				let bPlayerControlled = false;
 				if(actor!==null)
@@ -450,11 +428,9 @@ export class MotionTrackerDevice
 						bPlayerControlled = bPlayerControlled || actor.data.permission[playerIds[i]]>2;
 					}
 				}
-				if(actor!=null && actor!= undefined && immobile===undefined)
-					immobile = actor.effects?.find(e=> immobileStatuses.some(s=>s===e.data.flags.core.statusId));
 				if(
-					(bSeePlayers && !immobile && token.id!==this.tokenReference.id)
-					|| (!bSeePlayers && !bPlayerControlled && !immobile && token.id!==this.tokenReference.id)
+					(bSeePlayers && token.id!==this.tokenReference.id)
+					|| (!bSeePlayers && !bPlayerControlled && token.id!==this.tokenReference.id)
 				)
 				{
 					const oPos = computeTokenCenter(token);
@@ -507,26 +483,14 @@ export class MotionTrackerDevice
 		// deplay sounds by 0.1
 		if(!this.bMute)
 		{
-			if(x>0.1 && x<0.2 && this.sound_wave===null)
+			if(x>0.1 && x<0.2 && !this.waveLock)
 			{
-				let soundObj = this.soundBank[conf.audio.wave.src];
-				if(!soundObj.loaded)
-					soundObj.load();
-				if(soundObj.playing)
-					soundObj.stop();
-				this.sound_wave = soundObj.play(
-					{
-						offset:0,
-						volume: conf.audio.wave.volume*this.volume,
-						fade: 0.1
-					}
-				);
+				this.waveLock = true
+				AudioHelper.play({ src:conf.audio.wave.src }, false)
+				// Timeout should follow length of audio, with a few extra ms
+				setTimeout(() => this.waveLock = false, 200)
 			}
-			else if(x>0.2)
-			{
-				this.sound_wave = null;
-			}
-			if(x*distanceMax>nearestDist && this.sound_ping===null)
+			if(x*distanceMax>nearestDist && !this.soundLock)
 			{
 				let sound = conf.audio.far;
 				if(nearestDist<0.33*distanceMax)
@@ -535,22 +499,11 @@ export class MotionTrackerDevice
 					sound = conf.audio.medium;
 				else
 					sound = conf.audio.far;
-				let soundObj = this.soundBank[sound.src];
-				if(!soundObj.loaded)
-					soundObj.load();
-				if(soundObj.playing)
-				soundObj.stop();
-				this.sound_ping = soundObj.play(
-					{
-						offset:0,
-						volume: sound.volume*this.volume,
-						fade: 0.1
-					}
-				);
-			}
-			else if(x*distanceMax<nearestDist)
-			{
-				this.sound_ping = null;
+
+				this.soundLock = true
+				AudioHelper.play({ src:sound.src }, false)
+				// Timeout should follow length of audio, with a few extra ms
+				setTimeout(() => this.soundLock = false, 1200)
 			}
 		}
 
@@ -614,9 +567,6 @@ export class MotionTrackerDevice
 		this.pixi.app.ticker.remove(this.update, this);
 		this.pixi.app.ticker.stop();
 		this.pixi.app.ticker.destroy();
-		this.sound_wave = null;
-		this.sound_ping = null;
-		//clearInterval(this.sound_wave);
 	}
 
 	onSettingsChange(data)
