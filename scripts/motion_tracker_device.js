@@ -268,14 +268,18 @@ export class MotionTrackerDevice
 		});
 	}
 
-	loadTextures()
+	async loadTextures()
 	{
 		if(MotionTrackerDevice.PIXILoader === null)
 		{
-			MotionTrackerDevice.PIXILoader =  new PIXI.Loader();
-			MotionTrackerDevice.PIXILoader
-			.add([this.textures.background.M314, this.textures.background.Arious, this.textures.ping])
-			.load(this.loadTexturesFinish.bind(this));
+			// MotionTrackerDevice.PIXILoader =  new PIXI.Loader()
+			await PIXI.Assets.load(this.textures.background.M314);
+			await PIXI.Assets.load(this.textures.background.Arious);
+			await PIXI.Assets.load(this.textures.ping);
+			// const image = Sprite.from(texture);
+			// MotionTrackerDevice.PIXILoader
+			// 	.add([this.textures.background.M314, this.textures.background.Arious, this.textures.ping])
+			// 	.load(this.loadTexturesFinish.bind(this));
 		}
 		else
 		{
