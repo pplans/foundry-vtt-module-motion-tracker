@@ -97,10 +97,10 @@ Hooks.on('updatePlayer', () =>
 			{
 				muted: true,
 				volume: 1.,
-				close: {volume: 1., src: 'modules/motion_tracker/sounds/close.ogg'},
-				medium: {volume: 1., src: 'modules/motion_tracker/sounds/medium.ogg'},
-				far: {volume: 1., src: 'modules/motion_tracker/sounds/far.ogg'},
-				wave: {volume: 1., src: 'modules/motion_tracker/sounds/wave.ogg'},
+				wave: {volume: 1., src: 'modules/motion_tracker/sounds/motion_tracker_wave.ogg'},
+				close: {volume: 1., src: 'modules/motion_tracker/sounds/motion_tracker_ping_close.ogg'},
+				medium: {volume: 1., src: 'modules/motion_tracker/sounds/motion_tracker_ping_medium.ogg'},
+				far: {volume: 1., src: 'modules/motion_tracker/sounds/motion_tracker_ping_far.ogg'}
 			}
 		};
 	}
