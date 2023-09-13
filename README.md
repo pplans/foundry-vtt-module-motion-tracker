@@ -18,6 +18,11 @@ When hitted, the button will scan for the nearest active and visibles tokens bas
 
 # Changelog
 
+## v1.1.0
+* Support of Foundry VTT v11
+* Pixi migration to v7
+Contribution from CodaBool
+
 ## v1.0.0
 * Support of Foundry VTT v10
 * Disabled audio by default because of v10 sound API issue unloading an audio once it stops
@@ -122,6 +127,7 @@ Otakode - some indirect ideas and his feedbacks
 Freki - pushing me around to make this happen and giving me a lot of ideas and feedbacks
 Sasmira - a lot of feedbacks and contradictory ideas that are valued
 Minarkhaios - fadeout
+CodaBook - v11 & Pixi v7 migration
 KaWeNGoD - for the Spanish localization
 JNQ - for the French localization
 Foundry community, specially Alien RPG one
