@@ -4,8 +4,10 @@
   "description": "Allowing players to actually have a motion tracker visually in the game. The motion tracker is a tool that tracks moving objects. Here, we will show position of closest active and visible tokens filtered by some metrics as distance or even statuses.",
   "author": "Draedrus",
   "version": "1.1.0",
-  "compatibleCoreVersion": "11",
-  "minimumCoreVersion": "11",
+  "compatibility": {
+    "minimum": 11,
+    "verified": 11
+  },
   "esmodules": ["scripts/motion_tracker.js"],
   "socket": true,
 	"styles": [
@@ -26,7 +28,6 @@
 		"name": "Français",
 		"path": "lang/fr.json"
 	}],
-  "dependencies": [],
   "authors": [
     {
       "name": "Draedrus",
