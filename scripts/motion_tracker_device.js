@@ -416,9 +416,7 @@ export class MotionTrackerDevice
 		}
 		tokens.forEach(token => 
 			{
-				if (token.actor.statuses.has("MotionTracker.motionless")) {
-					return
-				}
+				let immobile = undefined;
 				let actor = token.actor;
 				let bPlayerControlled = false;
 				if(actor!==null)
@@ -428,8 +426,12 @@ export class MotionTrackerDevice
 						bPlayerControlled = bPlayerControlled || actor.data.permission[playerIds[i]]>2;
 					}
 				}
+				// v11 introduces proper statuses for actors, immobileStatuses comes from player configuration
+				if(actor!==null && actor!== undefined && immobile===undefined)
+					immobile = actor.statuses?.find(e=> immobileStatuses.some(s=>s===e));
+
 				if(
-					(bSeePlayers && token.id!==this.tokenReference.id)
+					(bSeePlayers && !immobile && token.id!==this.tokenReference.id)
 					|| (!bSeePlayers && !bPlayerControlled && token.id!==this.tokenReference.id)
 				)
 				{
@@ -486,7 +488,7 @@ export class MotionTrackerDevice
 			if(x>0.1 && x<0.2 && !this.waveLock)
 			{
 				this.waveLock = true
-				AudioHelper.play({ src:conf.audio.wave.src }, false)
+				AudioHelper.play({ src:conf.audio.wave.src, volume: this.volume, autoplay: true }, false)
 				// Timeout should follow length of audio, with a few extra ms
 				setTimeout(() => this.waveLock = false, 200)
 			}
@@ -501,7 +503,7 @@ export class MotionTrackerDevice
 					sound = conf.audio.far;
 
 				this.soundLock = true
-				AudioHelper.play({ src:sound.src }, false)
+				AudioHelper.play({ src:sound.src, volume: sound.volume * this.volume, autoplay: true }, false)
 				// Timeout should follow length of audio, with a few extra ms
 				setTimeout(() => this.soundLock = false, 1200)
 			}
