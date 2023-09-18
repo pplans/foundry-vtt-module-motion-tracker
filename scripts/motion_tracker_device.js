@@ -330,8 +330,7 @@ export class MotionTrackerDevice
 			this.pixi.app = new PIXI.Application(
 				{
 					width: SIZE, height: SIZE+MotionTrackerDevice.SCREEN_ADDITIONAL_CANVAS_HEIGHT,
-					backgroundColor: 0x000000ff, clearBeforeRender: true,
-					useContextAlpha: false
+					backgroundColor: 0x000000ff, clearBeforeRender: true
 				});
 		}
 		
@@ -340,7 +339,7 @@ export class MotionTrackerDevice
 		this.container.appendChild(this.pixi.app.view);
 
 		// setup base
-		this.pixi.app.renderer.backgroundColor = 0x000000;
+		this.pixi.app.renderer.background.color = 0x000000;
 		this.pixi.app.renderer.clear();
 		const backgroundAndPings = new PIXI.Container();
 		backgroundAndPings.width = SIZE;
@@ -432,7 +431,7 @@ export class MotionTrackerDevice
 
 				if(
 					(bSeePlayers && !immobile && token.id!==this.tokenReference.id)
-					|| (!bSeePlayers && !bPlayerControlled && token.id!==this.tokenReference.id)
+					|| (!bSeePlayers && !bPlayerControlled && !immobile && token.id!==this.tokenReference.id)
 				)
 				{
 					const oPos = computeTokenCenter(token);
