@@ -83,7 +83,7 @@ Hooks.on('updatePlayer', () =>
 			sounds: true,
 			soundsVolume: 0.5,
 			useHighDPI:true,
-			statusFilters: ['unconscious', 'sleep', 'stun', 'paralysis', 'restrain', 'prone'],
+			statusFilters: ['dead', 'unconscious', 'sleep', 'stun', 'paralysis', 'restrain', 'prone'],
 			general:
 			{
 				speed: MotionTrackerDevice.TRACK_SPEED,
