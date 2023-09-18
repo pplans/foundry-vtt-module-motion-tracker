@@ -432,7 +432,7 @@ export class MotionTrackerDevice
 
 				if(
 					(bSeePlayers && !immobile && token.id!==this.tokenReference.id)
-					|| (!bSeePlayers && !bPlayerControlled && token.id!==this.tokenReference.id)
+					|| (!bSeePlayers && !bPlayerControlled && !immobile && token.id!==this.tokenReference.id)
 				)
 				{
 					const oPos = computeTokenCenter(token);

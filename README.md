@@ -20,6 +20,10 @@ When hitted, the button will scan for the nearest active and visibles tokens bas
 
 ## v1.1.1
 * Fixed bugs introduced in v1.1.0
+  * Statuses in settings no more taken into account when "scan for players" is turned off
+
+## v1.1.1
+* Fixed bugs introduced in v1.1.0
   * Statuses in settings no more taken into account
   * Audio settings for volume no longer working
 
