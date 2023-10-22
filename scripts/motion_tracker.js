@@ -3,9 +3,14 @@ import {MotionTrackerDevice} from './motion_tracker_device.js'
 
 console.log("Motion Tracker Module Loaded");
 
+function hasAdminRights()
+{
+	return game.user.isGM || !game.settings.get(settings.REGISTER_CODE, 'gmOnly');
+}
+
 export function renderMotionTrackerIcon()
 {
-	if(game.user.isGM || !game.settings.get(settings.REGISTER_CODE, 'gmOnly'))
+	if(hasAdminRights())
 	{
 		const lang_html = $(`
 		<a class="chat-control-icon motion_tracker-dialog-button" title="Run Motion Tracker" style="margin-right: 7px">
@@ -26,7 +31,7 @@ function getUserDataId(_data)
      * Render Scene Controls Hook
      */
 Hooks.on("renderSceneControls", async (app, html, data) => {
-	if(game.user.isGM || !game.settings.get(settings.REGISTER_CODE, 'gmOnly'))
+	if(hasAdminRights())
 	{
 		const controlButtonIcon = `${settings.PATH}/textures/motion_tracker_ico.webp`;
 		const mtButtonHtml = await renderTemplate(`${settings.TEMPLATE_PATH}/menu_button.html`, {controlButtonIcon});
@@ -111,6 +116,14 @@ Hooks.on('updatePlayer', () =>
 	}
 });
 
+Hooks.on('controlToken', (_token) =>
+{
+	if(game.motion_tracker)
+	{
+		game.motion_tracker._onControlToken(_token);
+	}
+});
+
 /**
  * Main class to handle Motion Tracker Device.
  */
@@ -119,14 +132,13 @@ Hooks.on('updatePlayer', () =>
 	static get DEFAULT_OPTIONS()
 	{
 		return {
-			sounds: true,
-			soundsVolume: 0.5,
 			useHighDPI:true,
 			statusFilters: ['dead', 'unconscious', 'sleep', 'stun', 'paralysis', 'restrain', 'prone'],
 			general:
 			{
 				speed: MotionTrackerDevice.TRACK_SPEED,
-				theme: 'M314'
+				theme: 'M314',
+				enableFastTokenChange: false
 			},
 			rendering:
 			{
@@ -182,6 +194,7 @@ Hooks.on('updatePlayer', () =>
 	{
 		this.window = null;
 		this.openCloseListeners = [];
+		this.enableFastTokenChange = MotionTracker.CONFIG.general.enableFastTokenChange;
 		this._buildWindow();
 		this._initListeners();
 		this._welcomeMessage();
@@ -217,19 +230,34 @@ Hooks.on('updatePlayer', () =>
 				switch(request.type)
 				{
 					case 'init':
+					{
 						const owner = game.users.get(request.ownerId);
 						if(request.ownerId!==game.user.id && owner.data.role<game.user.role && game.user.hasRole(CONST.USER_ROLES.ASSISTANT))
 							this.open(request.user, request.ownerId, request.tokenReferenceId, request.viewedSceneId);
-					break;
+						break;
+					}
 					case 'open':
+					{
 						if((request.targetId===null || request.targetId===game.user.id))
 							this.open(request.user, request.ownerId, request.tokenReferenceId, request.viewedSceneId);
-					break;
+						break;
+					}
 					case 'close':
+					{
 						const sender = game.users.get(request.senderId);
 						if((request.targetId===null || request.targetId===game.user.id) && sender.data.role>=game.user.role)
 							this.closeAndNotify();
-					break;
+						break;
+					}
+					case 'changeTarget':
+					{
+						this.window.setData(request.user, request.ownerId, request.tokenReferenceId, request.viewedSceneId);
+						if(this.device !== null)
+						{
+							this.window.device.setData(request.user, request.tokenReferenceId, request.viewedSceneId);
+						}
+						break;
+					}
 				}
 			}
 		});
@@ -294,6 +322,26 @@ Hooks.on('updatePlayer', () =>
 			this.window._onPlayerUpdate();
 		}
 	}    
+
+	_onControlToken(_token)
+	{
+		if(this.window && hasAdminRights() && (this.window.tokenId === null || this.enableFastTokenChange))
+		{
+			let user = game.user;
+			let ownerId = game.user.id;
+			let tokenId = null;
+			let viewedScene = game.user.viewedScene;
+			
+			if(tokenId === null && _token!==null)
+				tokenId = _token.document.actorId;
+			this.window.setData(user, ownerId, tokenId, viewedScene);
+			if(this.device !== null)
+			{
+				this.window.device.setData(user, tokenId, viewedScene);
+			}
+			this.window.sendCommand(/*target id*/tokenId, 'changeTarget');
+		}
+	}
 	/**
 	 * Show the motion tracker animation based on data configuration made by the User.
 	 *
@@ -305,8 +353,6 @@ Hooks.on('updatePlayer', () =>
 	 */
 	async open(user = game.user, ownerId = game.user.id, tokenId = null, viewedScene = game.user.viewedScene)
 	{
-		if(tokenId === null && canvas.tokens.controlled.length>0)
-			tokenId = canvas.tokens.controlled[0].document.actorId;
 		this.window.setData(user, ownerId, tokenId, viewedScene);
 		await this.window.render(true);
 		this.openCloseListeners.forEach(function(_callback)
@@ -391,7 +437,9 @@ class MotionTrackerWindow extends Application
 	getData(options)
 	{
 		let data = mergeObject(MotionTracker.CONFIG, game.settings.get(settings.REGISTER_CODE, 'settings'), { insertKeys: false, insertValues: false });
-		data.ui = {audioMuteIcon: MotionTracker.CONFIG.audio.muted?'motion-tracker-options-unmute-ico':'motion-tracker-options-mute-ico'};
+		data.ui = {
+					audioMuteIcon: MotionTracker.CONFIG.audio.muted?'motion-tracker-options-unmute-ico':'motion-tracker-options-mute-ico'
+				, fastTokenChangeIcon: MotionTracker.CONFIG.general.enableFastTokenChange?'motion-tracker-options-ftc-enabled-ico':'motion-tracker-options-ftc-disabled-ico'};
 		return data;
 	}
 
@@ -537,6 +585,20 @@ class MotionTrackerWindow extends Application
 				}
 			})
 		;
+		html.find('.motion-tracker-options-fastTokenChange-toggle').click(
+			e => {
+				e.preventDefault();
+				if(this.enableFastTokenChange)
+				{
+					html.find('.motion-tracker-options-ftc-enabled-ico').addClass('motion-tracker-options-ftc-disabled-ico').removeClass('motion-tracker-options-ftc-enabled-ico');
+				}
+				else
+				{
+					html.find('.motion-tracker-options-ftc-disabled-ico').addClass('motion-tracker-options-ftc-enabled-ico').removeClass('motion-tracker-options-ftc-disabled-ico');
+				}
+				this.enableFastTokenChange = !this.enableFastTokenChange;
+			})
+		;
 	}
 
 	_onPlayerUpdate()
@@ -599,7 +661,7 @@ class MotionTrackerWindow extends Application
 			ownerId: this.ownerId,
 			user: this.user,
 			tokenReferenceId: this.tokenId,
-			viewedSceneId: this.viewedScene,
+			viewedSceneId: this.viewedSceneId,
 			targetId: target,
 			senderId: game.user.id,
 			notify: notify

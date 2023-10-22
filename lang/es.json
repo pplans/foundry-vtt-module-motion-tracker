@@ -22,6 +22,8 @@
 	"MOTIONTRACKER.scanSpeed": "Velocidad de la animación del rastreador",
 	"MOTIONTRACKER.themeTitle": "Tema",
 	"MOTIONTRACKER.themeHint": "Cambiará la apariencia del Rastreador de movimiento",
+	"MOTIONTRACKER.fastTokenChangeTitle": "Activar el cambio rapido de Tokens",
+	"MOTIONTRACKER.fastTokenChangeHint": "Si marcado, podeis cambiar el token que lleva el rastreador sin necesidad de cerrar. Funcionara en todo caso si abreis el rastreador sin selectionar algun token por la primera vez.",
 	"MOTIONTRACKER.enablePostProcessTitle": "Activar los efectos de animación de postproceso",
 	"MOTIONTRACKER.enablePostProcessHint": "Si se desmarca, se desactivarán algunas animaciones desconcertantes como, por ejemplo, un glitch",
 	"MOTIONTRACKER.statusesTitle": "Configuración de los estados",

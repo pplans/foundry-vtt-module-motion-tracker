@@ -23,6 +23,7 @@ export class MotionTrackerDevice
 		uniform float centerx;\
 		uniform float centery;\
 		uniform float ratio;\
+		uniform vec4 finalColorMask;\
 		'+MotionTrackerDevice.signalFunc+'\
 		void main(void)\
 		{\
@@ -33,6 +34,7 @@ export class MotionTrackerDevice
 			s = s>0.05?(tex.a*pow(clamp(1.-length(vTextureCoord*vec2(1., 1./ratio)-(s*d+vec2(.5)))-.75, 0., 1.)*4., 16.)):0.;\
 			s *= 1.+log(-fract(speed*time)+1.);\
 	   		gl_FragColor = mix(vec4(tex.rgb, 1.), vec4(1.), s);\
+			gl_FragColor = finalColorMask*gl_FragColor;\
 		}';
 	static vertShaderPing = '\
 		attribute vec2 aVertexPosition;\
@@ -77,6 +79,7 @@ export class MotionTrackerDevice
 		uniform float centerx;\
 		uniform float centery;\
 		uniform float ratio;\
+		uniform vec4 finalColorMask;\
 		'+MotionTrackerDevice.signalFunc+'\
 		void main(void)\
 		{\
@@ -87,6 +90,7 @@ export class MotionTrackerDevice
 			s = s>0.05?(tex.a*pow(clamp(1.-length(vTextureCoord*vec2(1., 1./ratio)-(s*d+vec2(.5)))-.75, 0., 1.)*4., 16.)):0.;\
 			s *= 1.+log(-fract(speed*time)+1.);\
 			gl_FragColor = mix(vec4(tex.rgb, 1.), vec4(1.), s);\
+			gl_FragColor = finalColorMask*gl_FragColor;\
 		}';
 	static fragShaderAriousPostProcess = '\
 		varying vec2 vTextureCoord;\
@@ -153,7 +157,7 @@ export class MotionTrackerDevice
 	// END SHADER BLOCK
 	static RATIO = 0.944; /* width of the background texture over its height */
 	static TRACK_SPEED = 0.01;
-	static uniformsBackground = {time: 0., speed: MotionTrackerDevice.TRACK_SPEED, centerx: 0., centery: 0., ratio: 1., uSampler: null};
+	static uniformsBackground = {time: 0., speed: MotionTrackerDevice.TRACK_SPEED, centerx: 0., centery: 0., ratio: 1., finalColorMask: new Float32Array([1., 1., 1., 1.]), uSampler: null};
 	static uniformsPing = {time: 0., speed: MotionTrackerDevice.TRACK_SPEED, emissive: 1., centerx: 0., centery: 0., distmax: 0.};
 	static uniformPostProcess = {time: 0., ratio: 1., scaleGlitch: 1.};
 
@@ -384,7 +388,10 @@ export class MotionTrackerDevice
 	update(delta)
 	{
 		if(this.user===null || this.tokenReference===null || this.tokenReference===undefined)
+		{
+			MotionTrackerDevice.uniformsBackground.finalColorMask = new Float32Array([1., .5, .5, .5]);
 			return;
+		}
 		// wipe precedent signals
 		this.signals.length = 0;
 
@@ -524,6 +531,7 @@ export class MotionTrackerDevice
 		MotionTrackerDevice.uniformsBackground.centerx = centerCanvas.x;
 		MotionTrackerDevice.uniformsBackground.centery = centerCanvas.y;
 		MotionTrackerDevice.uniformsBackground.ratio = MotionTrackerDevice.RATIO;
+		MotionTrackerDevice.uniformsBackground.finalColorMask = new Float32Array([1., 1., 1., 1.]);
 		MotionTrackerDevice.uniformsPing.time+=delta;
 		MotionTrackerDevice.uniformsPing.speed = MotionTrackerDevice.uniformsBackground.speed;
 		MotionTrackerDevice.uniformsPing.centerx = centerCanvas.x;
