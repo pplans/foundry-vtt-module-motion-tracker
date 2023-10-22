@@ -159,6 +159,26 @@
 	background-size: 32px;
 }
 
+.motion-tracker-options-ftc-enabled-ico
+{
+	cursor: pointer;
+	display: flex;
+	width: 16px;
+	height: 16px;
+	background: no-repeat url("./textures/motion_tracker_options_ftc_enabled_ico.webp");
+	background-size: 16px;
+}
+
+.motion-tracker-options-ftc-disabled-ico
+{
+	cursor: pointer;
+	display: flex;
+	width: 16px;
+	height: 16px;
+	background: no-repeat url("./textures/motion_tracker_options_ftc_disabled_ico.webp");
+	background-size: 16px;
+}
+
 .motion-tracker-hide-ico
 {
 	cursor: pointer;

@@ -24,6 +24,13 @@
                 <p class="notes">{{localize "MOTIONTRACKER.themeHint"}}</p>
             </div>
             <div class="form-group">
+                <label>{{localize "MOTIONTRACKER.fastTokenChangeTitle"}}</label>
+                <div class="form-fields">
+                    <input type="checkbox" name="enableFastTokenChange" data-dtype="Number" {{general.enableFastTokenChangeChecked}}>
+                </div>
+                <p class="notes">{{localize "MOTIONTRACKER.fastTokenChangeHint"}}</p>
+            </div>
+            <div class="form-group">
                 <label>{{localize "MOTIONTRACKER.enablePostProcessTitle"}}</label>
                 <div class="form-fields">
                     <input type="checkbox" name="enablePostProcess" data-dtype="Number" {{rendering.enablePostProcessChecked}}>

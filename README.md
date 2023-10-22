@@ -18,6 +18,10 @@ When hitted, the button will scan for the nearest active and visibles tokens bas
 
 # Changelog
 
+## v1.3.0
+* Add feedback when no actor is selected before starting the motion tracker
+* Added an option to fast change reference token without closing the app
+
 ## v1.2.0
 * Fixed last bugs introduced in v1.1.0, thanks to CodaBool
 * Added a control menu button to activate motion tracker, we plan to remove the old one later on

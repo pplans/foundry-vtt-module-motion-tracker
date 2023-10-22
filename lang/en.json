@@ -19,6 +19,8 @@
 	"MOTIONTRACKER.scanSpeed": "Tracking animation speed",
 	"MOTIONTRACKER.themeTitle": "Theme",
 	"MOTIONTRACKER.themeHint": "Will change appareance of the motion tracker",
+	"MOTIONTRACKER.fastTokenChangeTitle": "Enable fast token change",
+	"MOTIONTRACKER.fastTokenChangeHint": "If checked, you can change target token at will without closing the Motion Tracker. Even if you uncheck it, it will work if you selected no token at first.",
 	"MOTIONTRACKER.enablePostProcessTitle": "Enable Post Process animation effects",
 	"MOTIONTRACKER.enablePostProcessHint": "If unchecked it will disable some unnerving animations like a glitch for example",
 	"MOTIONTRACKER.statusesTitle": "Statuses settings",
