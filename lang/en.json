@@ -1,8 +1,9 @@
 {
 	"MOTIONTRACKER.WelcomeTitle": "Welcome to the Motion Tracker module",
 	"MOTIONTRACKER.WelcomeMessage": "This module was developped in order to bring some depth for the Alien RPG motion tracker tool we all love. When the button left of the dice in the chat is hit, the motion tracking window will show up. Beware, it won't work if you did not selected a token before. The signals are simply other visible tokens in the same scene, there are also a few filters as some statuses that work. Have fun!",
-	"MOTIONTRACKER.UpdateTitle": "Motion Tracker Update 0.5.0",
-	"MOTIONTRACKER.UpdateMessage": "Dear Motion Tracker users, this version (0.5.0) has changed a core feature: the tokens detection is no longer using token visibility but instead rely on the tokens statuses. The statuses the Motion Tracker use can be configured within the settings. For the occasion, I added a new status with its own icon that can be used only for this purpose, see the icon below. Have fun and enjoy your game!",
+	"MOTIONTRACKER.UpdateTitle": "Motion Tracker Update 1.2.0",
+	"MOTIONTRACKER.UpdateMessage": "Dear Motion Tracker users, this version (1.2.0) has changed a core feature: the tokens detection is no longer using token visibility but instead rely on the tokens statuses. The statuses the Motion Tracker use can be configured within the settings. For the occasion, I added a new status with its own icon that can be used only for this purpose, see the icon below. Have fun and enjoy your game!",
+	"MOTIONTRACKER.controlButton": "Open / Close Motion Tracker",
 	"MOTIONTRACKER.config": "Motion Tracker configuration",
 	"MOTIONTRACKER.configTitle": "Motion Tracker configuration",
 	"MOTIONTRACKER.configHint": "The motion trackers tracks the relative visible tokens from the selected token.",

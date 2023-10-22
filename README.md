@@ -18,6 +18,11 @@ When hitted, the button will scan for the nearest active and visibles tokens bas
 
 # Changelog
 
+## v1.2.0
+* Fixed last bugs introduced in v1.1.0, thanks to CodaBool
+* Added a control menu button to activate motion tracker, we plan to remove the old one later on
+* Updated some versions in the localizations
+
 ## v1.1.2
 * Fixed bugs introduced in v1.1.0
   * Statuses in settings no more taken into account when "scan for players" is turned off

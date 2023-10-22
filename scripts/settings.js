@@ -11,6 +11,8 @@ export const REGISTER_CODE = 'motion_tracker';
 export const MIN_SIZE = 64;
 export const MAX_SIZE = 512;
 export const MAX_PING_SIZE = 64;
+export const PATH = "modules/motion_tracker/";
+export const TEMPLATE_PATH = `${PATH}templates`;
 
 function gmOnly_Settings(callbackResize)
 {
@@ -105,7 +107,7 @@ class MotionTrackerConfig extends FormApplication
 		{
 			title: game.i18n.localize("MOTIONTRACKER.configTitle"),
 			id: "motion-tracker-config",
-			template: "modules/motion_tracker/templates/motion_tracker_config.html",
+			template: `${TEMPLATE_PATH}/motion_tracker_config.html`,
 			width: 500,
 			height: "auto",
 			closeOnSubmit: true,

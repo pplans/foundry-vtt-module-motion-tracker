@@ -55,6 +55,13 @@
 	background-size: 28px;
 }
 
+#controls ol.control-tools > li img.control-tool-motion-tracker-img
+{
+	width: 36px;
+	height: 36px;
+	margin-top: 36px;
+}
+
 #motion-tracker-canvas
 {
 	position: relative;
