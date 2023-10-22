@@ -22,6 +22,45 @@ function getUserDataId(_data)
 	return _data._id;
 }
 
+/**
+     * Render Scene Controls Hook
+     */
+Hooks.on("renderSceneControls", async (app, html, data) => {
+	if(game.user.isGM || !game.settings.get(settings.REGISTER_CODE, 'gmOnly'))
+	{
+		const controlButtonIcon = `${settings.PATH}/textures/motion_tracker_ico.webp`;
+		const mtButtonHtml = await renderTemplate(`${settings.TEMPLATE_PATH}/menu_button.html`, {controlButtonIcon});
+		
+		const mainControls = html.find(".control-tools.main-controls");
+
+		if (!mainControls?.length) return;
+
+		mainControls.append(mtButtonHtml);
+		const mtButton = html.find(".control-tools.main-controls li[data-control='motion-tracker']");
+		
+		mtButton
+			.on("click", event => {
+				const mtButton = html.find(".control-tools.main-controls li[data-control='motion-tracker']");
+
+				game.motion_tracker.openCloseListeners.push(function(_isOpen){
+					if(_isOpen)
+					{
+						mtButton.addClass('active');
+					}
+					else
+					{
+						mtButton.removeClass('active');
+					}
+				});
+				game.motion_tracker.toggle({});
+			}
+			)
+			//.on("contextmenu", event => ui.resetPosition(event))
+		;
+	}
+	return;
+});
+
 Hooks.on('init', ()=>
 {
 	// set up the mutation observer
@@ -142,6 +181,7 @@ Hooks.on('updatePlayer', () =>
 	constructor()
 	{
 		this.window = null;
+		this.openCloseListeners = [];
 		this._buildWindow();
 		this._initListeners();
 		this._welcomeMessage();
@@ -154,7 +194,7 @@ Hooks.on('updatePlayer', () =>
 	 */
 	_buildWindow()
 	{
-		this.window = new MotionTrackerWindow();
+		this.window = new MotionTrackerWindow(this);
 		this.currentCanvasPosition = MotionTracker.CONFIG.canvasZIndex;
 		this.currentUseHighDPI = MotionTracker.CONFIG.useHighDPI;
 	}
@@ -269,6 +309,10 @@ Hooks.on('updatePlayer', () =>
 			tokenId = canvas.tokens.controlled[0].document.actorId;
 		this.window.setData(user, ownerId, tokenId, viewedScene);
 		await this.window.render(true);
+		this.openCloseListeners.forEach(function(_callback)
+		{
+			_callback(true);
+		});
 		return new Promise((resolve, reject) =>
 		{
 			resolve();
@@ -293,10 +337,15 @@ Hooks.on('updatePlayer', () =>
 	toggle()
 	{
 		if(this.window.rendered)
+		{
 			this.close(game.user.id);
+			return false;
+		}
 		else
+		{
 			this.open();
-		return this.window.rendered===null;
+			return true;
+		}
 	}
 
 	onSettingsChange(data)
@@ -310,9 +359,10 @@ Hooks.on('updatePlayer', () =>
  */
 class MotionTrackerWindow extends Application
 {
-	constructor(options={})
+	constructor(_motionTracker, options={})
 	{
 		super(options);
+		this.motionTracker = _motionTracker;
 		this.windowElement = null;
 		this.canvas = null;
 		this.device = null;
@@ -586,6 +636,10 @@ class MotionTrackerWindow extends Application
  
 	close(options)
 	{
+		this.motionTracker.openCloseListeners.forEach(function(_callback)
+		{
+			_callback(false);
+		});
 		const owner = game.users.get(this.ownerId);
 		if(this.ownerId===game.user.id || owner.data.role<game.user.role && game.user.hasRole(CONST.USER_ROLES.ASSISTANT))
 		{

@@ -4,8 +4,9 @@
 	
 	"MOTIONTRACKER.WelcomeTitle": "Bienvenido al módulo Motion Tracker",
 	"MOTIONTRACKER.WelcomeMessage": "Este módulo ha sido desarrollado para aportar algo de profundidad a la herramienta de rastreador de movimiento de Alien RPG que todos amamos. Cuando se pulsa el botón a la izquierda del dado en el chat, la ventana del Rastreador de movimiento aparecerá. Cuidado, no funcionará si no has seleccionado una ficha antes. Las señales son simplemente otros tokens visibles en la misma escena, también hay algunos filtros como algunos estados que funcionan. ¡Diviértete!",
-	"MOTIONTRACKER.UpdateTitle": "Motion Tracker Actualización 0.5.0",
-	"MOTIONTRACKER.UpdateMessage": "Queridos usuarios de Motion Tracker, esta versión (0.5.0) ha cambiado una característica fundamental: la detección de tokens ya no utiliza la visibilidad de los tokens sino que se basa en los estados de los mismos. Los estados que utiliza el Rastreador de movimiento se pueden configurar en los ajustes. Para la ocasión, he añadido un nuevo estado con su propio icono que puede ser utilizado sólo para este propósito, ver el icono de abajo. ¡Diviértete y disfruta de tu juego!",
+	"MOTIONTRACKER.UpdateTitle": "Motion Tracker Actualización 1.2.0",
+	"MOTIONTRACKER.UpdateMessage": "Queridos usuarios de Motion Tracker, esta versión (1.2.0) ha cambiado una característica fundamental: la detección de tokens ya no utiliza la visibilidad de los tokens sino que se basa en los estados de los mismos. Los estados que utiliza el Rastreador de movimiento se pueden configurar en los ajustes. Para la ocasión, he añadido un nuevo estado con su propio icono que puede ser utilizado sólo para este propósito, ver el icono de abajo. ¡Diviértete y disfruta de tu juego!",
+	"MOTIONTRACKER.controlButton": "Abrir / Cerrar el Motion Tracker",
 	"MOTIONTRACKER.config": "Configuración de Motion Tracker",
 	"MOTIONTRACKER.configTitle": "Configuración de Motion Tracker",
 	"MOTIONTRACKER.configHint": "El Rastreador de movimiento rastrea los tokens visibles relativos desde el token seleccionado.",
