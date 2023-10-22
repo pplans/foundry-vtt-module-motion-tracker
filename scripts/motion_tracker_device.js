@@ -487,7 +487,7 @@ export class MotionTrackerDevice
 			if(x>0.1 && x<0.2 && !this.waveLock)
 			{
 				this.waveLock = true
-				AudioHelper.play({ src:conf.audio.wave.src, volume: this.volume, autoplay: true }, false)
+				AudioHelper.play({ src:conf.audio.wave.src, volume: conf.audio.wave.volume * this.volume, autoplay: true }, false)
 				// Timeout should follow length of audio, with a few extra ms
 				setTimeout(() => this.waveLock = false, 200)
 			}
