@@ -252,10 +252,6 @@ Hooks.on('controlToken', (_token) =>
 					case 'changeTarget':
 					{
 						this.window.setData(request.user, request.ownerId, request.tokenReferenceId, request.viewedSceneId);
-						if(this.device !== null)
-						{
-							this.window.device.setData(request.user, request.tokenReferenceId, request.viewedSceneId);
-						}
 						break;
 					}
 				}
@@ -335,10 +331,6 @@ Hooks.on('controlToken', (_token) =>
 			if(tokenId === null && _token!==null)
 				tokenId = _token.document.actorId;
 			this.window.setData(user, ownerId, tokenId, viewedScene);
-			if(this.device !== null)
-			{
-				this.window.device.setData(user, tokenId, viewedScene);
-			}
 			this.window.sendCommand(/*target id*/tokenId, 'changeTarget');
 		}
 	}
@@ -346,12 +338,12 @@ Hooks.on('controlToken', (_token) =>
 	 * Show the motion tracker animation based on data configuration made by the User.
 	 *
 	 * @param user the user who made the call (game.user by default).
-	 * @param synchronize
-	 * @param users list of users or userId who can see the roll, leave it empty if everyone can see.
-	 * @param blind if the call is blind for the current user
+	 * @param ownerId the owner of the motion tracker
+	 * @param tokenId token of reference for the motion tracker
+	 * @param viewedScene the scene watched by the motion tracker
 	 * @returns {Promise<boolean>} when resolved true if the animation was displayed, false if not.
 	 */
-	async open(user = game.user, ownerId = game.user.id, tokenId = null, viewedScene = game.user.viewedScene)
+	async open(user = game.user, ownerId = game.user.id, tokenId = this.window.tokenId, viewedScene = game.user.viewedScene)
 	{
 		this.window.setData(user, ownerId, tokenId, viewedScene);
 		await this.window.render(true);
@@ -721,6 +713,10 @@ class MotionTrackerWindow extends Application
 		this.ownerId = ownerId;
 		this.tokenId = tokenId;
 		this.viewedSceneId = sceneId;
+		if(this.device !== null)
+		{
+			this.device.setData(this.user, this.tokenId, this.viewedSceneId);
+		}
 	}
     
 	/**
