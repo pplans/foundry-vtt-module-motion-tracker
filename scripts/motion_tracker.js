@@ -8,25 +8,6 @@ function hasAdminRights()
 	return game.user.isGM || !game.settings.get(settings.REGISTER_CODE, 'gmOnly');
 }
 
-export function renderMotionTrackerIcon()
-{
-	if(hasAdminRights())
-	{
-		const lang_html = $(`
-		<a class="chat-control-icon motion_tracker-dialog-button" title="Run Motion Tracker" style="margin-right: 7px">
-			<i class="fas motion-tracker-ico"></i>
-		</a>
-		`);
-		jQuery("#chat-controls label").before(lang_html);
-		jQuery('a.motion_tracker-dialog-button').click(() => { game.motion_tracker.toggle({}); });
-	}
-}
-
-function getUserDataId(_data)
-{
-	return _data._id;
-}
-
 /**
      * Render Scene Controls Hook
      */
@@ -68,30 +49,6 @@ Hooks.on("renderSceneControls", async (app, html, data) => {
 
 Hooks.on('init', ()=>
 {
-	// set up the mutation observer
-	let observer = new MutationObserver(function (mutations, me)
-	{
-		// `mutations` is an array of mutations that occurred
-		// `me` is the MutationObserver instance
-		let chatControls = document.getElementById('chat-controls');
-		if (chatControls && game.user)
-		{
-			renderMotionTrackerIcon();
-			if(game.motion_tracker===undefined || game.motion_tracker===null)
-			{
-				game.motion_tracker = new MotionTracker();
-			}
-			me.disconnect(); // stop observing
-			return;
-		}
-	});
-	
-	// start observing
-	observer.observe(document, {
-	  childList: true,
-	  subtree: true
-	});
-
 	settings.registerSettings((data)=>
 	{
 		if(game.motion_tracker)
@@ -99,6 +56,11 @@ Hooks.on('init', ()=>
 			game.motion_tracker.resize(data);
 		}
 	});
+
+	if(game.motion_tracker===undefined || game.motion_tracker===null)
+	{
+		game.motion_tracker = new MotionTracker();
+	}
 });
 
 Hooks.on('ready', ()=>
@@ -252,10 +214,6 @@ Hooks.on('controlToken', (_token) =>
 					case 'changeTarget':
 					{
 						this.window.setData(request.user, request.ownerId, request.tokenReferenceId, request.viewedSceneId);
-						if(this.device !== null)
-						{
-							this.window.device.setData(request.user, request.tokenReferenceId, request.viewedSceneId);
-						}
 						break;
 					}
 				}
@@ -268,7 +226,7 @@ Hooks.on('controlToken', (_token) =>
 	 */
 	_welcomeMessage()
 	{
-		if(!game.user.getFlag(settings.REGISTER_CODE,'welcomeMessageShown'))
+		if(game.user != null && !game.user.getFlag(settings.REGISTER_CODE,'welcomeMessageShown'))
 		{
 			if(!game.user.getFlag(settings.REGISTER_CODE,'appearance'))
 			{
@@ -283,7 +241,7 @@ Hooks.on('controlToken', (_token) =>
 			}
 			game.user.setFlag(settings.REGISTER_CODE,'welcomeMessageShown',true);
 		}
-		if(!game.user.getFlag(settings.REGISTER_CODE, settings.VERSION))
+		if(game.user != null && !game.user.getFlag(settings.REGISTER_CODE, settings.VERSION))
 		{
 			renderTemplate("modules/motion_tracker/templates/updateMessage.html", {}).then((html)=>
 			{
@@ -325,7 +283,7 @@ Hooks.on('controlToken', (_token) =>
 
 	_onControlToken(_token)
 	{
-		if(this.window && hasAdminRights() && (this.window.tokenId === null || this.enableFastTokenChange))
+		if(this.window && hasAdminRights() && (this.window.tokenId === null || this.window.enableFastTokenChange))
 		{
 			let user = game.user;
 			let ownerId = game.user.id;
@@ -335,10 +293,6 @@ Hooks.on('controlToken', (_token) =>
 			if(tokenId === null && _token!==null)
 				tokenId = _token.document.actorId;
 			this.window.setData(user, ownerId, tokenId, viewedScene);
-			if(this.device !== null)
-			{
-				this.window.device.setData(user, tokenId, viewedScene);
-			}
 			this.window.sendCommand(/*target id*/tokenId, 'changeTarget');
 		}
 	}
@@ -346,12 +300,12 @@ Hooks.on('controlToken', (_token) =>
 	 * Show the motion tracker animation based on data configuration made by the User.
 	 *
 	 * @param user the user who made the call (game.user by default).
-	 * @param synchronize
-	 * @param users list of users or userId who can see the roll, leave it empty if everyone can see.
-	 * @param blind if the call is blind for the current user
+	 * @param ownerId the owner of the motion tracker
+	 * @param tokenId token of reference for the motion tracker
+	 * @param viewedScene the scene watched by the motion tracker
 	 * @returns {Promise<boolean>} when resolved true if the animation was displayed, false if not.
 	 */
-	async open(user = game.user, ownerId = game.user.id, tokenId = null, viewedScene = game.user.viewedScene)
+	async open(user = game.user, ownerId = game.user.id, tokenId = this.window.tokenId, viewedScene = game.user.viewedScene)
 	{
 		this.window.setData(user, ownerId, tokenId, viewedScene);
 		await this.window.render(true);
@@ -721,6 +675,10 @@ class MotionTrackerWindow extends Application
 		this.ownerId = ownerId;
 		this.tokenId = tokenId;
 		this.viewedSceneId = sceneId;
+		if(this.device !== null)
+		{
+			this.device.setData(this.user, this.tokenId, this.viewedSceneId);
+		}
 	}
     
 	/**
