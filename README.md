@@ -20,6 +20,7 @@ When hitted, the button will scan for the nearest active and visibles tokens bas
 
 ## v1.3.1
 * Fix init motion tracker broken
+* Fix fast token change not working
 
 ## v1.3.0
 * Add feedback when no actor is selected before starting the motion tracker
