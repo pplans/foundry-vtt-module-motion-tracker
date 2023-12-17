@@ -396,7 +396,7 @@ class MotionTrackerWindow extends Application
 		data.ui = {
 					audioMuteIcon: MotionTracker.CONFIG.audio.muted?'motion-tracker-options-unmute-ico':'motion-tracker-options-mute-ico'
 				, fastTokenChangeIcon: MotionTracker.CONFIG.general.enableFastTokenChange?'motion-tracker-options-ftc-enabled-ico':'motion-tracker-options-ftc-disabled-ico'
-				, inverseStatusIcon: MotionTracker.CONFIG.general.inverseStatus?'motion-tracker-options-inverse-status-enabled-ico':'motion-tracker-options-inverse-status-disabled-ico'
+				, inverseStatusIcon: MotionTracker.CONFIG.general.enableInverseStatus?'motion-tracker-options-inverse-status-enabled-ico':'motion-tracker-options-inverse-status-disabled-ico'
 			};
 		return data;
 	}
