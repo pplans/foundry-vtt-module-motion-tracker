@@ -179,6 +179,26 @@
 	background-size: 16px;
 }
 
+.motion-tracker-options-inverse-status-enabled-ico
+{
+	cursor: pointer;
+	display: flex;
+	width: 16px;
+	height: 16px;
+	background: no-repeat url("./textures/motion_tracker_options_inverse_status_enabled_ico.webp");
+	background-size: 16px;
+}
+
+.motion-tracker-options-inverse-status-disabled-ico
+{
+	cursor: pointer;
+	display: flex;
+	width: 16px;
+	height: 16px;
+	background: no-repeat url("./textures/motion_tracker_options_inverse_status_disabled_ico.webp");
+	background-size: 16px;
+}
+
 .motion-tracker-hide-ico
 {
 	cursor: pointer;

@@ -31,6 +31,13 @@
                 <p class="notes">{{localize "MOTIONTRACKER.fastTokenChangeHint"}}</p>
             </div>
             <div class="form-group">
+                <label>{{localize "MOTIONTRACKER.inverseStatusTitle"}}</label>
+                <div class="form-fields">
+                    <input type="checkbox" name="enableInverseStatus" data-dtype="Number" {{general.enableInverseStatusChecked}}>
+                </div>
+                <p class="notes">{{localize "MOTIONTRACKER.inverseStatusHint"}}</p>
+            </div>
+            <div class="form-group">
                 <label>{{localize "MOTIONTRACKER.enablePostProcessTitle"}}</label>
                 <div class="form-fields">
                     <input type="checkbox" name="enablePostProcess" data-dtype="Number" {{rendering.enablePostProcessChecked}}>

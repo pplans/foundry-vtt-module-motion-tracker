@@ -205,7 +205,8 @@ class MotionTrackerConfig extends FormApplication
 			{
 				speed: formData['scan-speed'],
 				theme: formData['theme'],
-				enableFastTokenChange: formData['enableFastTokenChange']
+				enableFastTokenChange: formData['enableFastTokenChange'],
+				inverseStatus: formData['enableInverseStatus']
 			},
 			statusFilters: statusFiltersTraited,
 			rendering:

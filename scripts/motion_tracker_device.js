@@ -212,6 +212,8 @@ export class MotionTrackerDevice
 		this.config = config;
 		this.tokenReference = null;
 
+		this.enableInverseStatus = MotionTracker.CONFIG.general.enableInverseStatus;
+
 		this.user = null;
 
 		this.signals = [];
@@ -434,7 +436,15 @@ export class MotionTrackerDevice
 				}
 				// v11 introduces proper statuses for actors, immobileStatuses comes from player configuration
 				if(actor!==null && actor!== undefined && immobile===undefined)
+				{
 					immobile = actor.statuses?.find(e=> immobileStatuses.some(s=>s===e));
+					if(this.enableInverseStatus && immobile !==undefined)
+						immobile = !immobile;
+					else if(this.enableInverseStatus)
+					{
+						immobile = true;
+					}
+				}
 
 				if(
 					(bSeePlayers && !immobile && token.id!==this.tokenReference.id)

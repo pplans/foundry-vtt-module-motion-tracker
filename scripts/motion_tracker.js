@@ -100,7 +100,8 @@ Hooks.on('controlToken', (_token) =>
 			{
 				speed: MotionTrackerDevice.TRACK_SPEED,
 				theme: 'M314',
-				enableFastTokenChange: false
+				enableFastTokenChange: false,
+				enableInverseStatus: false
 			},
 			rendering:
 			{
@@ -157,6 +158,7 @@ Hooks.on('controlToken', (_token) =>
 		this.window = null;
 		this.openCloseListeners = [];
 		this.enableFastTokenChange = MotionTracker.CONFIG.general.enableFastTokenChange;
+		this.enableInverseStatus = MotionTracker.CONFIG.general.enableInverseStatus;
 		this._buildWindow();
 		this._initListeners();
 		this._welcomeMessage();
@@ -393,7 +395,9 @@ class MotionTrackerWindow extends Application
 		let data = mergeObject(MotionTracker.CONFIG, game.settings.get(settings.REGISTER_CODE, 'settings'), { insertKeys: false, insertValues: false });
 		data.ui = {
 					audioMuteIcon: MotionTracker.CONFIG.audio.muted?'motion-tracker-options-unmute-ico':'motion-tracker-options-mute-ico'
-				, fastTokenChangeIcon: MotionTracker.CONFIG.general.enableFastTokenChange?'motion-tracker-options-ftc-enabled-ico':'motion-tracker-options-ftc-disabled-ico'};
+				, fastTokenChangeIcon: MotionTracker.CONFIG.general.enableFastTokenChange?'motion-tracker-options-ftc-enabled-ico':'motion-tracker-options-ftc-disabled-ico'
+				, inverseStatusIcon: MotionTracker.CONFIG.general.inverseStatus?'motion-tracker-options-inverse-status-enabled-ico':'motion-tracker-options-inverse-status-disabled-ico'
+			};
 		return data;
 	}
 
@@ -506,6 +510,19 @@ class MotionTrackerWindow extends Application
 	activateListeners(html)
 	{
 		super.activateListeners(html);
+
+		let updateButton = function(_html, _eval, _action, _cssEnabled, _cssDisabled)
+		{
+			if(_eval())
+			{
+				_html.find('.'+_cssEnabled).addClass(_cssDisabled).removeClass(_cssEnabled);
+			}
+			else
+			{
+				_html.find('.'+_cssDisabled).addClass(_cssEnabled).removeClass(_cssDisabled);
+			}
+			_action();
+		};
 		 
 		html.find('.motion-tracker-options-toggle').click(
 			e => {
@@ -527,30 +544,60 @@ class MotionTrackerWindow extends Application
 		html.find('.motion-tracker-options-mute-toggle').click(
 			e => {
 				e.preventDefault();
+				updateButton(html, () => this.device && !this.device.isMuted()
+					, () => { this.device && !this.device.isMuted()?this.device.mute():this.device.unMute(); }
+					,'motion-tracker-options-mute-ico', 'motion-tracker-options-unmute-ico'
+				);
+				/*var enabledIco = 'motion-tracker-options-mute-ico';
+				var disabledIco = 'motion-tracker-options-unmute-ico';
 				if(this.device && !this.device.isMuted())
 				{
-					html.find('.motion-tracker-options-mute-ico').addClass('motion-tracker-options-unmute-ico').removeClass('motion-tracker-options-mute-ico');
+					html.find('.'+enabledIco).addClass(disabledIco).removeClass(enabledIco);
 					this.device.mute();
 				}
 				else if(this.device)
 				{
-					html.find('.motion-tracker-options-unmute-ico').addClass('motion-tracker-options-mute-ico').removeClass('motion-tracker-options-unmute-ico');
+					html.find('.'+disabledIco).addClass(enabledIco).removeClass(disabledIco);
 					this.device.unMute();
-				}
+				}*/
 			})
 		;
 		html.find('.motion-tracker-options-fastTokenChange-toggle').click(
 			e => {
 				e.preventDefault();
+				updateButton(html, () => this.enableFastTokenChange, () => { this.enableFastTokenChange = !this.enableFastTokenChange; }
+					,'motion-tracker-options-ftc-enabled-ico', 'motion-tracker-options-ftc-disabled-ico'
+				);
+				/*var enabledIco = 'motion-tracker-options-ftc-enabled-ico';
+				var disabledIco = 'motion-tracker-options-ftc-disabled-ico';
 				if(this.enableFastTokenChange)
 				{
-					html.find('.motion-tracker-options-ftc-enabled-ico').addClass('motion-tracker-options-ftc-disabled-ico').removeClass('motion-tracker-options-ftc-enabled-ico');
+					html.find('.'+enabledIco).addClass(disabledIco).removeClass(enabledIco);
 				}
 				else
 				{
-					html.find('.motion-tracker-options-ftc-disabled-ico').addClass('motion-tracker-options-ftc-enabled-ico').removeClass('motion-tracker-options-ftc-disabled-ico');
+					html.find('.'+disabledIco).addClass(enabledIco).removeClass(disabledIco);
 				}
-				this.enableFastTokenChange = !this.enableFastTokenChange;
+				this.enableFastTokenChange = !this.enableFastTokenChange;*/
+			})
+		;
+		html.find('.motion-tracker-options-inverseStatus-toggle').click(
+			e => {
+				e.preventDefault();
+				updateButton(html, () => this.device.enableInverseStatus, () => { this.device.enableInverseStatus = !this.device.enableInverseStatus; }
+					,'motion-tracker-options-inverse-status-enabled-ico', 'motion-tracker-options-inverse-status-disabled-ico'
+				);
+				/*var enabledIco = 'motion-tracker-options-inverse-status-enabled-ico';
+				var disabledIco = 'motion-tracker-options-inverse-status-disabled-ico';
+				if(this.enableInverseStatus)
+				{
+					html.find('.'+enabledIco).addClass(disabledIco).removeClass(enabledIco);
+				}
+				else
+				{
+					html.find('.'+disabledIco).addClass(enabledIco).removeClass(disabledIco);
+				}
+				this.enableInverseStatus = !this.enableInverseStatus;*/
 			})
 		;
 	}
