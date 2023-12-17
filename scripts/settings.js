@@ -119,6 +119,7 @@ class MotionTrackerConfig extends FormApplication
 	{
 		let data = mergeObject(MotionTracker.CONFIG, game.settings.get(REGISTER_CODE, 'settings'), { insertKeys: false, insertValues: false });
 		data.general.enableFastTokenChangeChecked = data.general.enableFastTokenChange?'checked':'';
+		data.general.enableInverseStatusChecked = data.general.enableInverseStatus?'checked':'';
 		data.rendering.enablePostProcessChecked = data.rendering.enablePostProcess?'checked':'';
 		data.audio.mutedChecked = data.audio.muted?'checked':'';
 		data.statusFiltersExt = [];
@@ -205,7 +206,8 @@ class MotionTrackerConfig extends FormApplication
 			{
 				speed: formData['scan-speed'],
 				theme: formData['theme'],
-				enableFastTokenChange: formData['enableFastTokenChange']
+				enableFastTokenChange: formData['enableFastTokenChange'],
+				enableInverseStatus: formData['enableInverseStatus']
 			},
 			statusFilters: statusFiltersTraited,
 			rendering:

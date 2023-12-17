@@ -18,6 +18,9 @@ When hitted, the button will scan for the nearest active and visibles tokens bas
 
 # Changelog
 
+## v1.4.1
+* Added an option to invert token filtering
+
 ## v1.3.1
 * Fix init motion tracker broken
 * Fix fast token change not working

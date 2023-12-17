@@ -24,6 +24,8 @@
 	"MOTIONTRACKER.themeHint": "Cambiará la apariencia del Rastreador de movimiento",
 	"MOTIONTRACKER.fastTokenChangeTitle": "Activar el cambio rapido de Tokens",
 	"MOTIONTRACKER.fastTokenChangeHint": "Si marcado, podeis cambiar el token que lleva el rastreador sin necesidad de cerrar. Funcionara en todo caso si abreis el rastreador sin selectionar algun token por la primera vez.",
+	"MOTIONTRACKER.inverseStatusTitle": "Filtro de estatus inverso",
+	"MOTIONTRACKER.inverseStatusHint": "i marcado, invertira el filtro de estatus para los tokens, si algun token queda marcado como que se mueve, el systema lo considerara como mobil.",
 	"MOTIONTRACKER.enablePostProcessTitle": "Activar los efectos de animación de postproceso",
 	"MOTIONTRACKER.enablePostProcessHint": "Si se desmarca, se desactivarán algunas animaciones desconcertantes como, por ejemplo, un glitch",
 	"MOTIONTRACKER.statusesTitle": "Configuración de los estados",
