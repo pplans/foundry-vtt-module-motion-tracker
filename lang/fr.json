@@ -1,8 +1,8 @@
 {
 	"MOTIONTRACKER.WelcomeTitle": "Bienvenue dans le module Motion Tracker",
 	"MOTIONTRACKER.WelcomeMessage": "Ce module a été développé pour vous permettre de donner de la profondeur au Motion Tracker dans le jeu de rôle Alien que nous aimons tous. Quand le bouton à la gauche des dés dans le chat est pressé, la fenêtre du Motion Tracker va s'ouvrir. Attention, cela ne fonctionnera pas si vous n'avez pas sélectionné un jeton auparavant. Les signaux sont simplement les autres jetons visibles dans la même scène, il existe aussi quelques filtres et status qui activeront la visibilité. Have fun!",
-	"MOTIONTRACKER.UpdateTitle": "Motion Tracker Update 1.2.0",
-	"MOTIONTRACKER.UpdateMessage": "Cher utilisateur du module Motion Tracker, cette version (1.2.0) modifie un comportement central: la détection des jetons ne se base plus sur la visibilité mais repose maintenant sur un status des jetons. Les status utilisés par le Motion Tracker peuvent être configurés dans les paramètres. Pour l'occasion, j'ai ajouté un nouveau status avec sa propre icone qui ne peut servir qu'à cela. Amusez vous bien !",
+	"MOTIONTRACKER.UpdateTitle": "Mise à jour du Motion Tracker",
+	"MOTIONTRACKER.UpdateMessage": "Chers utilisateurs du Motion Tracker, cette version a eu des changements récents, s'il vous plaît veuillez les retrouver sur la page officielle du module. Bon jeu à vous tou(te)s!",
 	"MOTIONTRACKER.controlButton": "Ouvrez / Fermez le Motion Tracker",
 	"MOTIONTRACKER.config": "Configuration du Motion Tracker",
 	"MOTIONTRACKER.configTitle": "Configuration du Motion Tracker",

@@ -6,7 +6,7 @@ export function registerSettings(callbackResize)
   gmOnly_Settings(callbackResize);
 }
 
-export const VERSION = '0.5.0';
+export const VERSION = '1.4.1';
 export const REGISTER_CODE = 'motion_tracker';
 export const MIN_SIZE = 64;
 export const MAX_SIZE = 512;
