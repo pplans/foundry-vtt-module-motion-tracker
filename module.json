@@ -1,33 +1,38 @@
 {
-  "name": "motion_tracker",
   "title": "Alien RPG - Motion Tracker",
   "description": "Allowing players to actually have a motion tracker visually in the game. The motion tracker is a tool that tracks moving objects. Here, we will show position of closest active and visible tokens filtered by some metrics as distance or even statuses.",
-  "author": "Draedrus",
   "version": "1.4.1",
   "compatibility": {
-    "minimum": 11,
-    "verified": 11
+    "minimum": "11",
+    "verified": "11"
   },
-  "esmodules": ["scripts/motion_tracker.js"],
+  "esmodules": [
+    "scripts/motion_tracker.js"
+  ],
   "socket": true,
-	"styles": [
-		"style.css"
-	],
-	"languages": [{
-		"lang": "en",
-		"name": "English",
-		"path": "lang/en.json"
-	},
-  {
-		"lang": "es",
-		"name": "Español",
-		"path": "lang/en.json"
-	},
+  "styles": [
+    "style.css"
+  ],
+  "languages": [
     {
-		"lang": "fr",
-		"name": "Français",
-		"path": "lang/fr.json"
-	}],
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json",
+      "flags": {}
+    },
+    {
+      "lang": "es",
+      "name": "Español",
+      "path": "lang/en.json",
+      "flags": {}
+    },
+    {
+      "lang": "fr",
+      "name": "Français",
+      "path": "lang/fr.json",
+      "flags": {}
+    }
+  ],
   "authors": [
     {
       "name": "Draedrus",
@@ -37,5 +42,14 @@
   ],
   "manifest": "https://raw.githubusercontent.com/pplans/foundry-vtt-module-motion-tracker/main/module.json",
   "download": "https://github.com/pplans/foundry-vtt-module-motion-tracker/archive/refs/heads/main.zip",
-  "license": "readme.md"
+  "license": "readme.md",
+  "id": "motion_tracker",
+  "relationships": {
+    "systems": [
+      {
+        "id": "alienrpg",
+        "type": "system"
+      }
+    ]
+  }
 }
