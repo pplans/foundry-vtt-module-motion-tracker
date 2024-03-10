@@ -162,5 +162,6 @@ Minarkhaios - fadeout
 CodaBook - v11 & Pixi v7 migration
 KaWeNGoD - for the Spanish localization
 JNQ - for the French localization
+Truncated - for the module.json update
 Foundry community, specially Alien RPG one
 Some parts of the code may resemble to dice-so-nice sources, this project is actually based on dice-so-nice and tends to get as far as possible to it with time
