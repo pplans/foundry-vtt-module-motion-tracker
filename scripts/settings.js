@@ -118,6 +118,8 @@ class MotionTrackerConfig extends FormApplication
 	getData(options)
 	{
 		let data = mergeObject(MotionTracker.CONFIG, game.settings.get(REGISTER_CODE, 'settings'), { insertKeys: false, insertValues: false });
+		data.general.useFakeSignalsChecked = data.general.useFakeSignals ? 'checked':'';
+		data.general.applyScreenGlitchChecked = data.general.applyScreenGlitch ? 'checked':'';
 		data.general.enableFastTokenChangeChecked = data.general.enableFastTokenChange?'checked':'';
 		data.general.enableInverseStatusChecked = data.general.enableInverseStatus?'checked':'';
 		data.rendering.enablePostProcessChecked = data.rendering.enablePostProcess?'checked':'';
@@ -206,6 +208,8 @@ class MotionTrackerConfig extends FormApplication
 			{
 				speed: formData['scan-speed'],
 				theme: formData['theme'],
+				useFakeSignals: formData['useFakeSignals'],
+				applyScreenGlitch: formData['applyScreenGlitch'],
 				enableFastTokenChange: formData['enableFastTokenChange'],
 				enableInverseStatus: formData['enableInverseStatus']
 			},

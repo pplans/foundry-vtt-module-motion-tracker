@@ -100,6 +100,8 @@ Hooks.on('controlToken', (_token) =>
 			{
 				speed: MotionTrackerDevice.TRACK_SPEED,
 				theme: 'M314',
+				useFakeSignals: false,
+				applyScreenGlitch: false,
 				enableFastTokenChange: false,
 				enableInverseStatus: false
 			},
@@ -157,6 +159,7 @@ Hooks.on('controlToken', (_token) =>
 	{
 		this.window = null;
 		this.openCloseListeners = [];
+		this.useFakeSignals = MotionTracker.CONFIG.general.useFakeSignals;
 		this.enableFastTokenChange = MotionTracker.CONFIG.general.enableFastTokenChange;
 		this.enableInverseStatus = MotionTracker.CONFIG.general.enableInverseStatus;
 		this._buildWindow();
@@ -203,7 +206,9 @@ Hooks.on('controlToken', (_token) =>
 					case 'open':
 					{
 						if((request.targetId===null || request.targetId===game.user.id))
-							this.open(request.user, request.ownerId, request.tokenReferenceId, request.viewedSceneId);
+						{
+							this.open(request.user, request.ownerId, request.tokenReferenceId, request.viewedSceneId, request.data);
+						}
 						break;
 					}
 					case 'close':
@@ -216,6 +221,20 @@ Hooks.on('controlToken', (_token) =>
 					case 'changeTarget':
 					{
 						this.window.setData(request.user, request.ownerId, request.tokenReferenceId, request.viewedSceneId);
+						break;
+					}
+					case 'fakeSignals':
+					{
+						this.window.device.bMakeFakeSignals = !this.window.device.bMakeFakeSignals;
+						if(request.data.fakedSignals !== undefined)
+						{
+							this.window.device.fakeSignals = request.data.fakedSignals;
+						}
+						break;
+					}
+					case 'applyScreenGlitch':
+					{
+						this.window.device.bApplyGlitchScreen = !this.window.device.bApplyGlitchScreen;
 						break;
 					}
 				}
@@ -307,10 +326,10 @@ Hooks.on('controlToken', (_token) =>
 	 * @param viewedScene the scene watched by the motion tracker
 	 * @returns {Promise<boolean>} when resolved true if the animation was displayed, false if not.
 	 */
-	async open(user = game.user, ownerId = game.user.id, tokenId = this.window.tokenId, viewedScene = game.user.viewedScene)
+	async open(user = game.user, ownerId = game.user.id, tokenId = this.window.tokenId, viewedScene = game.user.viewedScene, _data = undefined)
 	{
 		this.window.setData(user, ownerId, tokenId, viewedScene);
-		await this.window.render(true);
+		await this.window.render(_data, true);
 		this.openCloseListeners.forEach(function(_callback)
 		{
 			_callback(true);
@@ -394,7 +413,10 @@ class MotionTrackerWindow extends Application
 	{
 		let data = mergeObject(MotionTracker.CONFIG, game.settings.get(settings.REGISTER_CODE, 'settings'), { insertKeys: false, insertValues: false });
 		data.ui = {
-					audioMuteIcon: MotionTracker.CONFIG.audio.muted?'motion-tracker-options-unmute-ico':'motion-tracker-options-mute-ico'
+				isAdmin: game.user.hasRole(CONST.USER_ROLES.ASSISTANT)
+				, fakeSignalsIcon: MotionTracker.CONFIG.general.useFakeSignals?'motion-tracker-options-use-fake-signals-ico':'motion-tracker-options-not-use-fake-signals-ico'
+				, applyScreenGlitchIcon: MotionTracker.CONFIG.general.applyScreenGlitch?'motion-tracker-options-apply-screen-glitch-ico':'motion-tracker-options-not-apply-screen-glitch-ico'
+				, audioMuteIcon: MotionTracker.CONFIG.audio.muted?'motion-tracker-options-unmute-ico':'motion-tracker-options-mute-ico'
 				, fastTokenChangeIcon: MotionTracker.CONFIG.general.enableFastTokenChange?'motion-tracker-options-ftc-enabled-ico':'motion-tracker-options-ftc-disabled-ico'
 				, inverseStatusIcon: MotionTracker.CONFIG.general.enableInverseStatus?'motion-tracker-options-inverse-status-enabled-ico':'motion-tracker-options-inverse-status-disabled-ico'
 			};
@@ -414,7 +436,14 @@ class MotionTrackerWindow extends Application
 				let playerItemLink = document.createElement('a');
 				let playerItemIco = document.createElement('i');
 				playerItemIco.className='motion-tracker-show';
-				playerItemLink.onclick = e=> { this.sendCommand(null, 'open'); };
+				playerItemLink.onclick = e=> {
+					this.sendCommand(null, 'open', null,
+					{
+						useFakeSignals: this.device.bMakeFakeSignals,
+						applyGlitchScreen: this.device.bApplyGlitchScreen,
+						fakedSignals: this.device.getFakedSignals()
+					});
+				};
 				playerItemLink.appendChild(playerItemIco);
 				playerItemLink.appendChild(document.createTextNode(game.i18n.localize('MOTIONTRACKER.showToAll')));
 				playerItem.appendChild(playerItemLink);
@@ -441,7 +470,19 @@ class MotionTrackerWindow extends Application
 						playerItemLink.style.color = '#888888';
 						playerItemLink.style.textDecoration = 'line-through';
 					}
-					playerItemLink.onclick = e=> { this.sendCommand(u.id, this.playerVisibility[u.id]==='open'?'close':'open'); };
+					playerItemLink.onclick = e=>
+					{
+						this.sendCommand(
+							u.id,
+							this.playerVisibility[u.id]==='open'?'close':'open',
+							null,
+							{
+								useFakeSignals: this.device.bMakeFakeSignals,
+								applyGlitchScreen: this.device.bApplyGlitchScreen,
+								fakedSignals: this.device.getFakedSignals()
+							}
+						);
+					};
 					playerItemLink.appendChild(playerItemIco);
 					playerItemLink.appendChild(document.createTextNode(u.data.name));
 					playerItem.appendChild(playerItemLink);
@@ -454,7 +495,7 @@ class MotionTrackerWindow extends Application
 	/******************************
 	 * @override
 	 ******************************/
-	async _render(...args)
+	async _render(_data = undefined, ...args)
 	{
 		if(this.rendered)
 			return;
@@ -483,6 +524,18 @@ class MotionTrackerWindow extends Application
 		let config = MotionTracker.ALL_CONFIG();
 		this.device = new MotionTrackerDevice(this.canvas, this.deviceIsReady.bind(this), config);
 		this.device.setData(this.user, this.tokenId, this.viewedSceneId);
+		if(_data.useFakeSignals !== undefined)
+		{
+			this.device.bMakeFakeSignals = _data.useFakeSignals;
+		}
+		if(_data.applyGlitchScreen !== undefined)
+		{
+			this.device.bApplyGlitchScreen = _data.applyGlitchScreen;
+		}
+		if(_data.fakedSignals !== undefined)
+		{
+			this.device.fakeSignals = _data.fakedSignals;
+		}
 
 		if(this.ownerId===game.user.id)
 		{
@@ -541,6 +594,32 @@ class MotionTrackerWindow extends Application
 				this.windowResetStyle();
 			}
 		);
+		html.find('.motion-tracker-options-use-fake-signals-toggle').click(
+			e => {
+				e.preventDefault();
+				updateButton(html, () => this.device && this.device.bMakeFakeSignals
+					, () => {
+						this.device.bMakeFakeSignals = !this.device.bMakeFakeSignals;
+						if(this.device)
+							this.device.recomputeFakedSignals();
+						this.sendCommand(null, 'fakeSignals', null, {fakedSignals:this.device.getFakedSignals()});
+					}
+					,'motion-tracker-options-use-fake-signals-ico', 'motion-tracker-options-not-use-fake-signals-ico'
+				);
+			})
+		;
+		html.find('.motion-tracker-options-apply-screen-glitch-toggle').click(
+			e => {
+				e.preventDefault();
+				updateButton(html, () => this.device && this.device.bApplyGlitchScreen
+					, () => {
+						this.device.bApplyGlitchScreen = !this.device.bApplyGlitchScreen;
+						this.sendCommand(null, 'applyScreenGlitch', null);
+					}
+					,'motion-tracker-options-apply-screen-glitch-ico', 'motion-tracker-options-not-apply-screen-glitch-ico'
+				);
+			})
+		;
 		html.find('.motion-tracker-options-mute-toggle').click(
 			e => {
 				e.preventDefault();
@@ -548,18 +627,6 @@ class MotionTrackerWindow extends Application
 					, () => { this.device && !this.device.isMuted()?this.device.mute():this.device.unMute(); }
 					,'motion-tracker-options-mute-ico', 'motion-tracker-options-unmute-ico'
 				);
-				/*var enabledIco = 'motion-tracker-options-mute-ico';
-				var disabledIco = 'motion-tracker-options-unmute-ico';
-				if(this.device && !this.device.isMuted())
-				{
-					html.find('.'+enabledIco).addClass(disabledIco).removeClass(enabledIco);
-					this.device.mute();
-				}
-				else if(this.device)
-				{
-					html.find('.'+disabledIco).addClass(enabledIco).removeClass(disabledIco);
-					this.device.unMute();
-				}*/
 			})
 		;
 		html.find('.motion-tracker-options-fastTokenChange-toggle').click(
@@ -568,17 +635,6 @@ class MotionTrackerWindow extends Application
 				updateButton(html, () => this.enableFastTokenChange, () => { this.enableFastTokenChange = !this.enableFastTokenChange; }
 					,'motion-tracker-options-ftc-enabled-ico', 'motion-tracker-options-ftc-disabled-ico'
 				);
-				/*var enabledIco = 'motion-tracker-options-ftc-enabled-ico';
-				var disabledIco = 'motion-tracker-options-ftc-disabled-ico';
-				if(this.enableFastTokenChange)
-				{
-					html.find('.'+enabledIco).addClass(disabledIco).removeClass(enabledIco);
-				}
-				else
-				{
-					html.find('.'+disabledIco).addClass(enabledIco).removeClass(disabledIco);
-				}
-				this.enableFastTokenChange = !this.enableFastTokenChange;*/
 			})
 		;
 		html.find('.motion-tracker-options-inverseStatus-toggle').click(
@@ -587,17 +643,6 @@ class MotionTrackerWindow extends Application
 				updateButton(html, () => this.device.enableInverseStatus, () => { this.device.enableInverseStatus = !this.device.enableInverseStatus; }
 					,'motion-tracker-options-inverse-status-enabled-ico', 'motion-tracker-options-inverse-status-disabled-ico'
 				);
-				/*var enabledIco = 'motion-tracker-options-inverse-status-enabled-ico';
-				var disabledIco = 'motion-tracker-options-inverse-status-disabled-ico';
-				if(this.enableInverseStatus)
-				{
-					html.find('.'+enabledIco).addClass(disabledIco).removeClass(enabledIco);
-				}
-				else
-				{
-					html.find('.'+disabledIco).addClass(enabledIco).removeClass(disabledIco);
-				}
-				this.enableInverseStatus = !this.enableInverseStatus;*/
 			})
 		;
 	}
@@ -654,7 +699,7 @@ class MotionTrackerWindow extends Application
 		this.renderPlayerList();
 	}
 
-	sendCommand(target, type, notify=null)
+	sendCommand(target, type, notify=null, object = undefined)
 	{
 		game.socket.emit('module.motion_tracker',
 		{
@@ -665,7 +710,8 @@ class MotionTrackerWindow extends Application
 			viewedSceneId: this.viewedSceneId,
 			targetId: target,
 			senderId: game.user.id,
-			notify: notify
+			notify: notify,
+			data: object
 		});
 	}
 

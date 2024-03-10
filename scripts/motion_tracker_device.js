@@ -15,15 +15,34 @@ export class MotionTrackerDevice
 			 );\
 	}\
 	';
+	static commonShaderCode = '\
+	float h2(vec2 _uv) \
+	{\
+		vec2 suv = sin(_uv); \
+		return fract(mix(suv.x*13.13032942, suv.y*12.01293203924, dot(_uv, suv))); \
+	}\
+	float oldScreenGlitch(vec2 _uv, float _s, float _t) \
+	{\
+		float h = floor(2.*fract(16.*_s*_uv.y)); \
+		float g = h2(_s*_uv+_t); \
+    	g += .1*h; \
+		g = clamp(g, 0., 1.); \
+    	g *= g; \
+    	g = g*g*(3.-2.*g); \
+		return g; \
+	}\
+	';
 	static fragShaderM314Background = '\
 		varying vec2 vTextureCoord;\
 		uniform sampler2D uSampler;\
+		uniform bool applyGlitch;\
 		uniform float time;\
 		uniform float speed;\
 		uniform float centerx;\
 		uniform float centery;\
 		uniform float ratio;\
 		uniform vec4 finalColorMask;\
+		'+MotionTrackerDevice.commonShaderCode+'\
 		'+MotionTrackerDevice.signalFunc+'\
 		void main(void)\
 		{\
@@ -35,6 +54,11 @@ export class MotionTrackerDevice
 			s *= 1.+log(-fract(speed*time)+1.);\
 	   		gl_FragColor = mix(vec4(tex.rgb, 1.), vec4(1.), s);\
 			gl_FragColor = finalColorMask*gl_FragColor;\
+			if(applyGlitch)\
+			{\
+				float g = .5*oldScreenGlitch(vTextureCoord, 1024., time);\
+				gl_FragColor = (1.-g)*gl_FragColor+g;\
+			}\
 		}';
 	static vertShaderPing = '\
 		attribute vec2 aVertexPosition;\
@@ -74,12 +98,14 @@ export class MotionTrackerDevice
 	static fragShaderAriousBackground = '\
 		varying vec2 vTextureCoord;\
 		uniform sampler2D uSampler;\
+		uniform bool applyGlitch;\
 		uniform float time;\
 		uniform float speed;\
 		uniform float centerx;\
 		uniform float centery;\
 		uniform float ratio;\
 		uniform vec4 finalColorMask;\
+		'+MotionTrackerDevice.commonShaderCode+'\
 		'+MotionTrackerDevice.signalFunc+'\
 		void main(void)\
 		{\
@@ -91,6 +117,11 @@ export class MotionTrackerDevice
 			s *= 1.+log(-fract(speed*time)+1.);\
 			gl_FragColor = mix(vec4(tex.rgb, 1.), vec4(1.), s);\
 			gl_FragColor = finalColorMask*gl_FragColor;\
+			if(applyGlitch)\
+			{\
+				float g = oldScreenGlitch(vTextureCoord, 1024., time);\
+				gl_FragColor = (1.-g)*gl_FragColor+g;\
+			}\
 		}';
 	static fragShaderAriousPostProcess = '\
 		varying vec2 vTextureCoord;\
@@ -157,7 +188,7 @@ export class MotionTrackerDevice
 	// END SHADER BLOCK
 	static RATIO = 0.944; /* width of the background texture over its height */
 	static TRACK_SPEED = 0.01;
-	static uniformsBackground = {time: 0., speed: MotionTrackerDevice.TRACK_SPEED, centerx: 0., centery: 0., ratio: 1., finalColorMask: new Float32Array([1., 1., 1., 1.]), uSampler: null};
+	static uniformsBackground = {applyGlitch: false, time: 0., speed: MotionTrackerDevice.TRACK_SPEED, centerx: 0., centery: 0., ratio: 1., finalColorMask: new Float32Array([1., 1., 1., 1.]), uSampler: null};
 	static uniformsPing = {time: 0., speed: MotionTrackerDevice.TRACK_SPEED, emissive: 1., centerx: 0., centery: 0., distmax: 0.};
 	static uniformPostProcess = {time: 0., ratio: 1., scaleGlitch: 1.};
 
@@ -217,6 +248,8 @@ export class MotionTrackerDevice
 		this.user = null;
 
 		this.signals = [];
+		this.bMakeFakeSignals = false;
+		this.bApplyGlitchScreen = false;
 		this.signalsMax = 20;
 
 		this.cbIsReady = cbIsReady;
@@ -226,6 +259,10 @@ export class MotionTrackerDevice
 		const distanceMax = game.settings.get(settings.REGISTER_CODE,'maxDistance');
 		MotionTrackerDevice.uniformsPing.distmax = distanceMax;
 		this.distUnitPerPx = SIZE*.5/distanceMax;
+
+		this.fakeSignals = [];
+		for(let i = 0; i<10; ++i)
+			this.fakeSignals.push({x: (-1.+2.*Math.random())*distanceMax*.8, y: (-1.+2.*Math.random())*distanceMax*.8});
 
 		this.pingSoundLock = false;
 		this.waveSoundLock = false;
@@ -387,6 +424,14 @@ export class MotionTrackerDevice
 		}
 	}
 
+	computeTokenCenter(token)
+	{
+		return {
+			x:0.5*token.width+token.x,
+			y:0.5*token.height+token.y
+		};
+	}
+
 	update(delta)
 	{
 		if(this.user===null || this.tokenReference===null || this.tokenReference===undefined)
@@ -397,14 +442,6 @@ export class MotionTrackerDevice
 		// wipe precedent signals
 		this.signals.length = 0;
 
-		function computeTokenCenter(token)
-		{
-			return {
-				x:0.5*token.width+token.x,
-				y:0.5*token.height+token.y
-			};
-		}
-
 		const scene = game.scenes.get(this.viewedSceneId);
 		const tokens = scene.data.tokens;
 		const bSeePlayers = game.settings.get(settings.REGISTER_CODE,'seePlayers');
@@ -414,7 +451,8 @@ export class MotionTrackerDevice
 		this.distUnitPerPx = SIZE*.5/distanceMax;
 		MotionTrackerDevice.uniformsPing.distmax = distanceMax;
 		const immobileStatuses = [...new Set([...MotionTrackerDevice.STATUS_MANDATORY, ...conf.statusFilters])];
-		const pos = computeTokenCenter(this.tokenReference);
+		const pos = this.computeTokenCenter(this.tokenReference);
+
 		let nearestDist = distanceMax;
 		let playerIds = [];
 		for(let i = 0;i<game.users._source.length;++i)
@@ -452,7 +490,7 @@ export class MotionTrackerDevice
 					|| (!bSeePlayers && !bPlayerControlled && !immobile && token.id!==this.tokenReference.id)
 				)
 				{
-					const oPos = computeTokenCenter(token);
+					const oPos = this.computeTokenCenter(token);
 					oPos.x = (oPos.x-pos.x)/scene.data.grid.size;
 					oPos.y = (oPos.y-pos.y)/scene.data.grid.size;
 					const normDir = (Math.abs(oPos.x)<0.01 && Math.abs(oPos.y)<0.01)?0.01:Math.sqrt(oPos.x*oPos.x+oPos.y*oPos.y);
@@ -461,7 +499,21 @@ export class MotionTrackerDevice
 					if(scanResult.distance<distanceMax)
 						this.signals.push(scanResult);
 				}
-			});
+			}
+		);
+		if(this.bMakeFakeSignals)
+		{
+			for(let i = 0; i<Math.max(0, this.signalsMax-this.signals.length); ++i)
+			{
+				const oPos = this.fakeSignals[i];
+				let newPos = {x:(oPos.x-pos.x)/scene.data.grid.size, y:(oPos.y-pos.y)/scene.data.grid.size};
+				const normDir = (Math.abs(newPos.x)<0.01 && Math.abs(newPos.y)<0.01)?0.01:Math.sqrt(newPos.x*newPos.x+newPos.y*newPos.y);
+				let scanResult = { distance: scene.data.gridDistance*normDir, dir: { x: newPos.x/normDir, y: newPos.y/normDir } };
+				nearestDist = Math.min(nearestDist, scanResult.distance);
+				if(scanResult.distance<distanceMax)
+					this.signals.push(scanResult);
+			}
+		}
 		const centerCanvas = {x: .5*this.pixi.app.stage.width, y:.5*this.pixi.app.stage.width }; // no longer height due to additional space, the MT is square
 		for(let i = 0;i<this.pixi.sprites_signals.length;++i)
 		{
@@ -537,6 +589,7 @@ export class MotionTrackerDevice
 			this.pixi.distanceMessage.alpha = 1.-x;
 		}
 
+		MotionTrackerDevice.uniformsBackground.applyGlitch = this.bApplyGlitchScreen;
 		MotionTrackerDevice.uniformsBackground.time += delta;
 		MotionTrackerDevice.uniformsBackground.speed = conf.general.speed;
 		MotionTrackerDevice.uniformsBackground.centerx = centerCanvas.x;
@@ -564,7 +617,31 @@ export class MotionTrackerDevice
 			const tokens = scene.data.tokens;
 			if(tokens.size>0)
 				this.tokenReference = tokens.find(tok => tok.actorId === tokenId);
+			this.recomputeFakedSignals();
 		}
+	}
+
+	recomputeFakedSignals()
+	{
+		if(this.tokenReference !== undefined && this.tokenReference != null)
+		{
+			const scene = game.scenes.get(this.viewedSceneId);
+			const tokenPos = this.computeTokenCenter(this.tokenReference);
+			const span = scene.data.grid.size * .75 * game.settings.get(settings.REGISTER_CODE,'maxDistance');
+			let lowerLimit = {x:tokenPos.x-span, y:tokenPos.y-span};
+			let upperLimit = {x:tokenPos.x+span, y:tokenPos.y+span};
+			for(let i = 0; i <this.signalsMax;++i)
+			{
+				this.fakeSignals[i] = {
+					x: (lowerLimit.x+(upperLimit.x-lowerLimit.x)*Math.random()),
+					y: (lowerLimit.y+(upperLimit.y-lowerLimit.y)*Math.random())};
+			}
+		}
+	}
+
+	getFakedSignals()
+	{
+		return this.fakeSignals;
 	}
 
 	isMuted()

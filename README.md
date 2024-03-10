@@ -18,6 +18,11 @@ When hitted, the button will scan for the nearest active and visibles tokens bas
 
 # Changelog
 
+## v1.5.0
+* Added screen glitch visual effect
+* Added faked signals feature, provides a way to simulate movement points that doesn't exist
+Both features might be of use to simulate a glitchy Motion Tracker
+
 ## v1.4.1
 * Added an option to invert token filtering
 
