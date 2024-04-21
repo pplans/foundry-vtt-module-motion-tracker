@@ -24,6 +24,20 @@
                 <p class="notes">{{localize "MOTIONTRACKER.themeHint"}}</p>
             </div>
             <div class="form-group">
+                <label>{{localize "MOTIONTRACKER.useFakeSignalsTitle"}}</label>
+                <div class="form-fields">
+                    <input type="checkbox" name="useFakeSignals" data-dtype="Number" {{general.useFakeSignalsChecked}}>
+                </div>
+                <p class="notes">{{localize "MOTIONTRACKER.useFakeSignalsHint"}}</p>
+            </div>
+            <div class="form-group">
+                <label>{{localize "MOTIONTRACKER.applyScreenGlitchTitle"}}</label>
+                <div class="form-fields">
+                    <input type="checkbox" name="applyScreenGlitch" data-dtype="Number" {{general.applyScreenGlitchChecked}}>
+                </div>
+                <p class="notes">{{localize "MOTIONTRACKER.applyScreenGlitchHint"}}</p>
+            </div>
+            <div class="form-group">
                 <label>{{localize "MOTIONTRACKER.fastTokenChangeTitle"}}</label>
                 <div class="form-fields">
                     <input type="checkbox" name="enableFastTokenChange" data-dtype="Number" {{general.enableFastTokenChangeChecked}}>

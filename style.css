@@ -80,6 +80,11 @@
 	display: none;
 }
 
+#motion-tracker-options-content i
+{
+	display: inline-block;
+}
+
 .motion-tracker .form-fields.status-container
 {
 	display: grid;
@@ -196,6 +201,46 @@
 	width: 16px;
 	height: 16px;
 	background: no-repeat url("./textures/motion_tracker_options_inverse_status_disabled_ico.webp");
+	background-size: 16px;
+}
+
+.motion-tracker-options-use-fake-signals-ico
+{
+	cursor: pointer;
+	display: flex;
+	width: 16px;
+	height: 16px;
+	background: no-repeat url("./textures/motion_tracker_options_use_fake_signals_ico.webp");
+	background-size: 16px;
+}
+
+.motion-tracker-options-not-use-fake-signals-ico
+{
+	cursor: pointer;
+	display: flex;
+	width: 16px;
+	height: 16px;
+	background: no-repeat url("./textures/motion_tracker_options_not_use_fake_signals_ico.webp");
+	background-size: 16px;
+}
+
+.motion-tracker-options-apply-screen-glitch-ico
+{
+	cursor: pointer;
+	display: flex;
+	width: 16px;
+	height: 16px;
+	background: no-repeat url("./textures/motion_tracker_options_apply_screen_glitch_ico.webp");
+	background-size: 16px;
+}
+
+.motion-tracker-options-not-apply-screen-glitch-ico
+{
+	cursor: pointer;
+	display: flex;
+	width: 16px;
+	height: 16px;
+	background: no-repeat url("./textures/motion_tracker_options_not_apply_screen_glitch_ico.webp");
 	background-size: 16px;
 }
 

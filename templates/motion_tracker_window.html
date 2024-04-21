@@ -3,9 +3,13 @@
 	<i class="motion-tracker-options-toggle motion-tracker-options-open-ico"></i>
 	<div id="motion-tracker-options-content">
 		<i class="motion-tracker-options-mute-toggle {{ui.audioMuteIcon}}"></i>
+		{{#ife ui.isAdmin true}}
+		<i class="motion-tracker-options-use-fake-signals-toggle {{ui.fakeSignalsIcon}}"></i>
+		<i class="motion-tracker-options-apply-screen-glitch-toggle {{ui.applyScreenGlitchIcon}}"></i>
 		<i class="motion-tracker-options-fastTokenChange-toggle {{ui.fastTokenChangeIcon}}"></i>
 		<i class="motion-tracker-options-inverseStatus-toggle {{ui.inverseStatusIcon}}"></i>
 		<div id="motion-tracker-options-player-list"></div>
+		{{/ife}}
 	</div>
 </div>
 <div id="motion-tracker-canvas" style="position: absolute; left: 0; top: 0;pointer-events: none;"></div>
