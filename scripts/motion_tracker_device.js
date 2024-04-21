@@ -627,7 +627,7 @@ export class MotionTrackerDevice
 		{
 			const scene = game.scenes.get(this.viewedSceneId);
 			const tokenPos = this.computeTokenCenter(this.tokenReference);
-			const span = scene.data.grid.size * .75 * game.settings.get(settings.REGISTER_CODE,'maxDistance');
+			const span = scene.data.grid.size * .5 * game.settings.get(settings.REGISTER_CODE,'maxDistance');
 			let lowerLimit = {x:tokenPos.x-span, y:tokenPos.y-span};
 			let upperLimit = {x:tokenPos.x+span, y:tokenPos.y+span};
 			for(let i = 0; i <this.signalsMax;++i)
