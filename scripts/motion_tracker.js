@@ -199,7 +199,7 @@ Hooks.on('controlToken', (_token) =>
 					case 'init':
 					{
 						const owner = game.users.get(request.ownerId);
-						if(request.ownerId!==game.user.id && owner.data.role<game.user.role && game.user.hasRole(CONST.USER_ROLES.ASSISTANT))
+						if(request.ownerId!==game.user.id && owner.role<game.user.role && game.user.hasRole(CONST.USER_ROLES.ASSISTANT))
 							this.open(request.user, request.ownerId, request.tokenReferenceId, request.viewedSceneId);
 						break;
 					}
@@ -214,7 +214,7 @@ Hooks.on('controlToken', (_token) =>
 					case 'close':
 					{
 						const sender = game.users.get(request.senderId);
-						if((request.targetId===null || request.targetId===game.user.id) && sender.data.role>=game.user.role)
+						if((request.targetId===null || request.targetId===game.user.id) && sender.role>=game.user.role)
 							this.closeAndNotify();
 						break;
 					}
@@ -226,9 +226,9 @@ Hooks.on('controlToken', (_token) =>
 					case 'fakeSignals':
 					{
 						this.window.device.bMakeFakeSignals = !this.window.device.bMakeFakeSignals;
-						if(request.data.fakedSignals !== undefined)
+						if(request.fakedSignals !== undefined)
 						{
-							this.window.device.fakeSignals = request.data.fakedSignals;
+							this.window.device.fakeSignals = request.fakedSignals;
 						}
 						break;
 					}
@@ -459,10 +459,10 @@ class MotionTrackerWindow extends Application
 					let playerItemIco = document.createElement('i');
 					playerItemIco.id = 'motion-tracker-visibility-'+u.id;
 					playerItemIco.className='fas '+(this.playerVisibility[u.id]==='open'?'motion-tracker-hide-ico':'motion-tracker-show-ico');
-					if(u.data.id==this.ownerId)
+					if(u._id==this.ownerId)
 					{
 						playerItemLink.className += 'motion-tracker-owner';
-						playerItemLink.style.color = u.data.color;
+						playerItemLink.style.color = u.color;
 					}
 					if(!u.active)
 					{
@@ -484,7 +484,7 @@ class MotionTrackerWindow extends Application
 						);
 					};
 					playerItemLink.appendChild(playerItemIco);
-					playerItemLink.appendChild(document.createTextNode(u.data.name));
+					playerItemLink.appendChild(document.createTextNode(u.name));
 					playerItem.appendChild(playerItemLink);
 					playerList.appendChild(playerItem);
 				}
@@ -666,17 +666,17 @@ class MotionTrackerWindow extends Application
 						type='open';
 					else if(type==='init')
 						type = 'close';
-					this.playerVisibility[u.data.id] = type;
+					this.playerVisibility[u._id] = type;
 					const classRemoved = type==='open'?'motion-tracker-show-ico':'motion-tracker-hide-ico';
 					const classAdded = type==='open'?'motion-tracker-hide-ico':'motion-tracker-show-ico';
-					this.element.find('#motion-tracker-visibility-'+u.data.id).addClass(classAdded).removeClass(classRemoved);
+					this.element.find('#motion-tracker-visibility-'+u._id).addClass(classAdded).removeClass(classRemoved);
 				}
 				else
 				{
-					this.playerVisibility[u.data.id] = 'close';
+					this.playerVisibility[u._id] = 'close';
 					const classRemoved = 'motion-tracker-hide-ico';
 					const classAdded = 'motion-tracker-show-ico';
-					this.element.find('#motion-tracker-visibility-'+u.data.id).addClass(classAdded).removeClass(classRemoved);
+					this.element.find('#motion-tracker-visibility-'+u._id).addClass(classAdded).removeClass(classRemoved);
 				}
 			});
 		}
@@ -750,7 +750,7 @@ class MotionTrackerWindow extends Application
 			_callback(false);
 		});
 		const owner = game.users.get(this.ownerId);
-		if(this.ownerId===game.user.id || owner.data.role<game.user.role && game.user.hasRole(CONST.USER_ROLES.ASSISTANT))
+		if(this.ownerId===game.user.id || owner.role<game.user.role && game.user.hasRole(CONST.USER_ROLES.ASSISTANT))
 		{
 			this.sendCommand(null, 'close');
 		}
