@@ -18,6 +18,9 @@ When hitted, the button will scan for the nearest active and visibles tokens bas
 
 # Changelog
 
+## v1.5.1
+* v12 portability
+
 ## v1.5.0
 * Added screen glitch visual effect
 * Added faked signals feature, provides a way to simulate movement points that doesn't exist
@@ -159,9 +162,10 @@ Otakode - some indirect ideas and his feedbacks
 Freki - pushing me around to make this happen and giving me a lot of ideas and feedbacks
 Sasmira - a lot of feedbacks and contradictory ideas that are valued
 Minarkhaios - fadeout
-CodaBook - v11 & Pixi v7 migration
+CodaBool - v11 & Pixi v7 migration
 KaWeNGoD - for the Spanish localization
 JNQ - for the French localization
 Truncated - for the module.json update
+IcedEagle - v12 migration
 Foundry community, specially Alien RPG one
 Some parts of the code may resemble to dice-so-nice sources, this project is actually based on dice-so-nice and tends to get as far as possible to it with time
