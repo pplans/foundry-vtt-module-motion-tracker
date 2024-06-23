@@ -443,7 +443,7 @@ export class MotionTrackerDevice
 		this.signals.length = 0;
 
 		const scene = game.scenes.get(this.viewedSceneId);
-		const tokens = scene.data.tokens;
+		const tokens = scene.tokens;
 		const bSeePlayers = game.settings.get(settings.REGISTER_CODE,'seePlayers');
 		const distanceMax = game.settings.get(settings.REGISTER_CODE,'maxDistance');
 		const SIZE = game.settings.get(settings.REGISTER_CODE,'size');
@@ -469,7 +469,7 @@ export class MotionTrackerDevice
 				{
 					for(let i = 0;i < playerIds.length;++i)
 					{
-						bPlayerControlled = bPlayerControlled || actor.data.permission[playerIds[i]]>2;
+						bPlayerControlled = bPlayerControlled || actor.permission[playerIds[i]]>2;
 					}
 				}
 				// v11 introduces proper statuses for actors, immobileStatuses comes from player configuration
@@ -491,10 +491,10 @@ export class MotionTrackerDevice
 				)
 				{
 					const oPos = this.computeTokenCenter(token);
-					oPos.x = (oPos.x-pos.x)/scene.data.grid.size;
-					oPos.y = (oPos.y-pos.y)/scene.data.grid.size;
+					oPos.x = (oPos.x-pos.x)/scene.grid.size;
+					oPos.y = (oPos.y-pos.y)/scene.grid.size;
 					const normDir = (Math.abs(oPos.x)<0.01 && Math.abs(oPos.y)<0.01)?0.01:Math.sqrt(oPos.x*oPos.x+oPos.y*oPos.y);
-					let scanResult = { distance: scene.data.gridDistance*normDir, dir: { x: oPos.x/normDir, y: oPos.y/normDir } };
+					let scanResult = { distance: scene.grid.distance*normDir, dir: { x: oPos.x/normDir, y: oPos.y/normDir } };
 					nearestDist = Math.min(nearestDist, scanResult.distance);
 					if(scanResult.distance<distanceMax)
 						this.signals.push(scanResult);
@@ -506,9 +506,9 @@ export class MotionTrackerDevice
 			for(let i = 0; i<Math.max(0, this.signalsMax-this.signals.length); ++i)
 			{
 				const oPos = this.fakeSignals[i];
-				let newPos = {x:(oPos.x-pos.x)/scene.data.grid.size, y:(oPos.y-pos.y)/scene.data.grid.size};
+				let newPos = {x:(oPos.x-pos.x)/scene.grid.size, y:(oPos.y-pos.y)/scene.grid.size};
 				const normDir = (Math.abs(newPos.x)<0.01 && Math.abs(newPos.y)<0.01)?0.01:Math.sqrt(newPos.x*newPos.x+newPos.y*newPos.y);
-				let scanResult = { distance: scene.data.gridDistance*normDir, dir: { x: newPos.x/normDir, y: newPos.y/normDir } };
+				let scanResult = { distance: scene.grid.distance*normDir, dir: { x: newPos.x/normDir, y: newPos.y/normDir } };
 				nearestDist = Math.min(nearestDist, scanResult.distance);
 				if(scanResult.distance<distanceMax)
 					this.signals.push(scanResult);
@@ -580,12 +580,12 @@ export class MotionTrackerDevice
 
 		if(x*distanceMax>nearestDist)
 		{
-			this.pixi.distanceMessage.text = nearestDist.toFixed(2)+scene.data.gridUnits;
+			this.pixi.distanceMessage.text = nearestDist.toFixed(2)+scene.grid.units;
 			this.pixi.distanceMessage.alpha = x;
 		}
 		else
 		{
-			this.pixi.distanceMessage.text = '0'+scene.data.gridUnits;
+			this.pixi.distanceMessage.text = '0'+scene.grid.units;
 			this.pixi.distanceMessage.alpha = 1.-x;
 		}
 
@@ -614,7 +614,7 @@ export class MotionTrackerDevice
 		const scene = game.scenes.get(this.viewedSceneId);
 		if(scene!==null && scene!==undefined)
 		{
-			const tokens = scene.data.tokens;
+			const tokens = scene.tokens;
 			if(tokens.size>0)
 				this.tokenReference = tokens.find(tok => tok.actorId === tokenId);
 			this.recomputeFakedSignals();
@@ -627,7 +627,7 @@ export class MotionTrackerDevice
 		{
 			const scene = game.scenes.get(this.viewedSceneId);
 			const tokenPos = this.computeTokenCenter(this.tokenReference);
-			const span = scene.data.grid.size * .5 * game.settings.get(settings.REGISTER_CODE,'maxDistance');
+			const span = scene.grid.size * .5 * game.settings.get(settings.REGISTER_CODE,'maxDistance');
 			let lowerLimit = {x:tokenPos.x-span, y:tokenPos.y-span};
 			let upperLimit = {x:tokenPos.x+span, y:tokenPos.y+span};
 			for(let i = 0; i <this.signalsMax;++i)
