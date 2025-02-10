@@ -45,11 +45,6 @@
   "license": "readme.md",
   "id": "motion_tracker",
   "relationships": {
-    "systems": [
-      {
-        "id": "alienrpg",
-        "type": "system"
-      }
-    ]
+    "systems": []
   }
 }
