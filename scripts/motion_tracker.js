@@ -61,6 +61,13 @@ Hooks.on('init', ()=>
 	{
 		game.motion_tracker = new MotionTracker();
 	}
+
+	// handle bars helpers
+	// if equal
+	Handlebars.registerHelper('ife', function (v1, v2, options) {
+		if (v1 === v2) return options.fn(this);
+		else return options.inverse(this);
+	});
 });
 
 Hooks.on('ready', ()=>

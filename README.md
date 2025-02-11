@@ -18,6 +18,10 @@ When hitted, the button will scan for the nearest active and visibles tokens bas
 
 # Changelog
 
+## v1.5.2
+* remove dependency from Alien RPG System
+* fixed a bug probably coming from Foundry removing once supported 'ife' operation from handlebars
+
 ## v1.5.1
 * v12 portability
 
