@@ -4,6 +4,20 @@ import {MotionTracker} from './motion_tracker.js'
 export class MotionTrackerDevice
 {
 	static PIXILoader = null;
+	PI = 3.141592653589793;
+	PI2 = 6.283185307179586;
+	cpuSignalFunc(_x)
+	{
+		function fract(_x)
+		{
+			return _x-Math.trunc(_x);
+		}
+		var x = fract(_x);
+		x = Math.max(fract(3.*x)*Math.min(1., Math.floor(3.*fract(x))),
+			Math.floor(.5*(Math.ceil(3.*x)-1.))
+		);
+		return x;
+	}
 	// BEGIN SHADER BLOCK
 	static signalFunc = '\
 	float signal(float x)\
@@ -231,6 +245,12 @@ export class MotionTrackerDevice
 		}
 	};
 
+	computeCanvasHeight()
+	{
+		const SIZE = game.settings.get(settings.REGISTER_CODE, 'size');
+		return SIZE+MotionTrackerDevice.SCREEN_ADDITIONAL_CANVAS_HEIGHT;
+	}
+
 	constructor(element_container, cbIsReady, config)
 	{
 		MotionTrackerDevice.uniformsPing.time = 0.0;
@@ -243,6 +263,9 @@ export class MotionTrackerDevice
 		this.config = config;
 		this.tokenReference = null;
 
+		this.centerCanvas = {x: 0, y: 0};
+		this.distanceMessageHeight = 15;
+
 		this.enableInverseStatus = MotionTracker.CONFIG.general.enableInverseStatus;
 
 		this.user = null;
@@ -250,7 +273,8 @@ export class MotionTrackerDevice
 		this.signals = [];
 		this.bMakeFakeSignals = false;
 		this.bApplyGlitchScreen = false;
-		this.signalsMax = 20;
+		this.signalsMax = game.settings.get(settings.REGISTER_CODE,'maxSignals');
+		this.signalsFakeMax = game.settings.get(settings.REGISTER_CODE,'maxFakeSignals');
 
 		this.cbIsReady = cbIsReady;
 
@@ -261,7 +285,7 @@ export class MotionTrackerDevice
 		this.distUnitPerPx = SIZE*.5/distanceMax;
 
 		this.fakeSignals = [];
-		for(let i = 0; i<10; ++i)
+		for(let i = 0; i<this.signalsFakeMax; ++i)
 			this.fakeSignals.push({x: (-1.+2.*Math.random())*distanceMax*.8, y: (-1.+2.*Math.random())*distanceMax*.8});
 
 		this.pingSoundLock = false;
@@ -331,8 +355,8 @@ export class MotionTrackerDevice
 				[
 					0, 0, // x, y
 					SIZE, 0, // x, y
-					SIZE, SIZE+MotionTrackerDevice.SCREEN_ADDITIONAL_CANVAS_HEIGHT,
-					0, SIZE+MotionTrackerDevice.SCREEN_ADDITIONAL_CANVAS_HEIGHT
+					SIZE, this.computeCanvasHeight(),
+					0, this.computeCanvasHeight()
 				], // x, y
 				2) // the size of the attribute
 			    .addAttribute('aTextureCoord', // the attribute name
@@ -372,7 +396,7 @@ export class MotionTrackerDevice
 		{
 			this.pixi.app = new PIXI.Application(
 				{
-					width: SIZE, height: SIZE+MotionTrackerDevice.SCREEN_ADDITIONAL_CANVAS_HEIGHT,
+					width: SIZE, height: this.computeCanvasHeight(),
 					backgroundColor: 0x000000ff, clearBeforeRender: true
 				});
 		}
@@ -382,11 +406,12 @@ export class MotionTrackerDevice
 		this.container.appendChild(this.pixi.app.view);
 
 		// setup base
+		this.centerCanvas = {x: .5*SIZE, y:.5*SIZE }; // no longer height due to additional space, the MT is square
 		this.pixi.app.renderer.background.color = 0x000000;
 		this.pixi.app.renderer.clear();
 		const backgroundAndPings = new PIXI.Container();
 		backgroundAndPings.width = SIZE;
-		backgroundAndPings.height = SIZE+MotionTrackerDevice.SCREEN_ADDITIONAL_CANVAS_HEIGHT;
+		backgroundAndPings.height = this.computeCanvasHeight();
 		
 		this.pixi.sprite_background.blendMode = PIXI.BLEND_MODES.ADD;
 		backgroundAndPings.addChild(this.pixi.sprite_background);
@@ -503,7 +528,7 @@ export class MotionTrackerDevice
 		);
 		if(this.bMakeFakeSignals)
 		{
-			for(let i = 0; i<Math.max(0, this.signalsMax-this.signals.length); ++i)
+			for(let i = 0; i<Math.max(0, this.signalsFakeMax-this.signals.length); ++i)
 			{
 				const oPos = this.fakeSignals[i];
 				let newPos = {x:(oPos.x-pos.x)/scene.grid.size, y:(oPos.y-pos.y)/scene.grid.size};
@@ -514,7 +539,7 @@ export class MotionTrackerDevice
 					this.signals.push(scanResult);
 			}
 		}
-		const centerCanvas = {x: .5*this.pixi.app.stage.width, y:.5*this.pixi.app.stage.width }; // no longer height due to additional space, the MT is square
+		const centerCanvas = this.centerCanvas;
 		for(let i = 0;i<this.pixi.sprites_signals.length;++i)
 		{
 			if(i<this.signals.length)
@@ -538,19 +563,11 @@ export class MotionTrackerDevice
 			{
 				this.pixi.distanceMessage.x = .25*centerCanvas.x;
 			}
-			this.pixi.distanceMessage.y = this.pixi.app.stage.height-5.-32.*(this.pixi.app.stage.width-settings.MIN_SIZE)/(settings.MAX_SIZE-settings.MIN_SIZE);
+			this.pixi.distanceMessage.y = SIZE-this.distanceMessageHeight;//this.pixi.app.stage.height-32;//this.pixi.app.stage.height-5.-32.*(this.pixi.app.stage.width-settings.MIN_SIZE)/(settings.MAX_SIZE-settings.MIN_SIZE);
 		}
 		
 		let x = MotionTrackerDevice.uniformsPing.time*MotionTrackerDevice.uniformsPing.speed;
-		function fract(x)
-		{
-			return x-Math.trunc(x);
-		}
-		x = fract(x);
-		x = Math.max(fract(3.*x)*Math.min(1., Math.floor(3.*fract(x))),
-			Math.floor(.5*(Math.ceil(3.*x)-1.))
-		);
-
+		x = this.cpuSignalFunc(x);
 		// deplay sounds by 0.1
 		if(!this.bMute)
 		{
@@ -578,16 +595,16 @@ export class MotionTrackerDevice
 			}
 		}
 
-		if(x*distanceMax>nearestDist)
-		{
+		//if(x*distanceMax>nearestDist)
+		//{
 			this.pixi.distanceMessage.text = nearestDist.toFixed(2)+scene.grid.units;
 			this.pixi.distanceMessage.alpha = x;
-		}
-		else
-		{
-			this.pixi.distanceMessage.text = '0'+scene.grid.units;
-			this.pixi.distanceMessage.alpha = 1.-x;
-		}
+		//}
+		//else
+		//{
+		//	this.pixi.distanceMessage.text = '0'+scene.grid.units;
+		//	this.pixi.distanceMessage.alpha = 1.-x;
+		//}
 
 		MotionTrackerDevice.uniformsBackground.applyGlitch = this.bApplyGlitchScreen;
 		MotionTrackerDevice.uniformsBackground.time += delta;
@@ -621,20 +638,33 @@ export class MotionTrackerDevice
 		}
 	}
 
+	computeDistance(_grid, _p0, _p1)
+	{
+		return Math.hypot(_p0.x - _p1.x, _p0.y - _p1.y, is3D ? (p0.elevation - p1.elevation) / _grid.distance
+          * _grid.size : 0) / _grid.size * _grid.distance;
+	}
+
+	computeGridDistance(_grid, _d)
+	{
+		return _d / _grid.distance * _grid.size;
+	}
+
 	recomputeFakedSignals()
 	{
 		if(this.tokenReference !== undefined && this.tokenReference != null)
 		{
 			const scene = game.scenes.get(this.viewedSceneId);
 			const tokenPos = this.computeTokenCenter(this.tokenReference);
-			const span = scene.grid.size * .5 * game.settings.get(settings.REGISTER_CODE,'maxDistance');
-			let lowerLimit = {x:tokenPos.x-span, y:tokenPos.y-span};
-			let upperLimit = {x:tokenPos.x+span, y:tokenPos.y+span};
-			for(let i = 0; i <this.signalsMax;++i)
+			const minFakeRange = this.computeGridDistance(scene.grid, game.settings.get(settings.REGISTER_CODE, 'minRangeFakeSignals'));
+			const maxFakeRange = this.computeGridDistance(scene.grid, game.settings.get(settings.REGISTER_CODE, 'maxRangeFakeSignals'));
+			for(let i = 0; i <this.signalsFakeMax;++i)
 			{
-				this.fakeSignals[i] = {
-					x: (lowerLimit.x+(upperLimit.x-lowerLimit.x)*Math.random()),
-					y: (lowerLimit.y+(upperLimit.y-lowerLimit.y)*Math.random())};
+				const angle = this.PI2 * Math.random();
+				const rangeRatio = Math.random();
+				const positionRange = minFakeRange+(maxFakeRange-minFakeRange)*rangeRatio;
+				var cx = tokenPos.x + Math.cos(angle) * positionRange;
+				var cy = tokenPos.y + Math.sin(angle) * positionRange;
+				this.fakeSignals[i] = {x: cx, y: cy};
 			}
 		}
 	}

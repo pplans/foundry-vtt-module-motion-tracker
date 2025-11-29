@@ -17,16 +17,22 @@ Hooks.on("renderSceneControls", async (app, html, data) => {
 		const controlButtonIcon = `${settings.PATH}/textures/motion_tracker_ico.webp`;
 		const mtButtonHtml = await renderTemplate(`${settings.TEMPLATE_PATH}/menu_button.html`, {controlButtonIcon});
 		
-		const mainControls = html.find(".control-tools.main-controls");
+		const controlId = "#scene-controls-layers";
+		const controlItemId = controlId + " button[data-control='motion-tracker']";
 
-		if (!mainControls?.length) return;
+		var htmlJQuery = $(html);
+		const mainControlsMenu = htmlJQuery.find(controlId);
 
-		mainControls.append(mtButtonHtml);
-		const mtButton = html.find(".control-tools.main-controls li[data-control='motion-tracker']");
+		if (!mainControlsMenu?.length) return;
+
+		mainControlsMenu.append(mtButtonHtml);
+		const mtButton = htmlJQuery.find(controlItemId);
+
+		if (!mtButton?.length) return;
 		
 		mtButton
 			.on("click", event => {
-				const mtButton = html.find(".control-tools.main-controls li[data-control='motion-tracker']");
+				const mtButton = htmlJQuery.find(controlItemId);
 
 				game.motion_tracker.openCloseListeners.push(function(_isOpen){
 					if(_isOpen)
@@ -41,7 +47,6 @@ Hooks.on("renderSceneControls", async (app, html, data) => {
 				game.motion_tracker.toggle({});
 			}
 			)
-			//.on("contextmenu", event => ui.resetPosition(event))
 		;
 	}
 	return;
