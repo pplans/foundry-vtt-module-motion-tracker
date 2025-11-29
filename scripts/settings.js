@@ -6,7 +6,7 @@ export function registerSettings(callbackResize)
   gmOnly_Settings(callbackResize);
 }
 
-export const VERSION = '1.4.1';
+export const VERSION = '1.5.3';
 export const REGISTER_CODE = 'motion_tracker';
 export const MIN_SIZE = 64;
 export const MAX_SIZE = 512;
@@ -75,6 +75,66 @@ function gmOnly_Settings(callbackResize)
 		range: {
 		    min: 5,
 		    max: 100,
+		    step: 1
+		}
+	});
+
+	game.settings.register(REGISTER_CODE,'maxSignals',
+	{
+		name : 'MOTIONTRACKER.maxSignalsTitle',
+		hint : 'MOTIONTRACKER.maxSignalsHint',
+		scope :'world',
+		config : true,
+		type: Number,
+		default: 20,
+		range: {
+		    min: 5,
+		    max: 100,
+		    step: 1
+		}
+	});
+
+	game.settings.register(REGISTER_CODE,'maxFakeSignals',
+	{
+		name : 'MOTIONTRACKER.maxFakeSignalsTitle',
+		hint : 'MOTIONTRACKER.maxFakeSignalsHint',
+		scope :'world',
+		config : true,
+		type: Number,
+		default: 10,
+		range: {
+		    min: 0,
+		    max: 100,
+		    step: 1
+		}
+	});
+
+	game.settings.register(REGISTER_CODE,'minRangeFakeSignals',
+	{
+		name : 'MOTIONTRACKER.minRangeFakeSignalsTitle',
+		hint : 'MOTIONTRACKER.minRangeFakeSignalsHint',
+		scope :'world',
+		config : true,
+		type: Number,
+		default: 20,
+		range: {
+		    min: 0,
+		    max: 1000,
+		    step: 1
+		}
+	});
+
+	game.settings.register(REGISTER_CODE,'maxRangeFakeSignals',
+	{
+		name : 'MOTIONTRACKER.maxRangeFakeSignalsTitle',
+		hint : 'MOTIONTRACKER.maxRangeFakeSignalsHint',
+		scope :'world',
+		config : true,
+		type: Number,
+		default: 80,
+		range: {
+		    min: 0,
+		    max: 1000,
 		    step: 1
 		}
 	});

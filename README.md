@@ -1,8 +1,8 @@
 # foundry-vtt-module-motion-tracker
 A module giving life to the Alien RPG motion tracker in foundry VTT
 
-The module installs a button just over the chat box that you can hit.
-When hitted, the button will scan for the nearest active and visibles tokens based on the selected token.
+The module installs a button on the left controls in Foundry viewport.
+When hit, the button will scan for the nearest active and visibles tokens based on the selected token.
 
 ## Player visibility control
 * In the window I added options to control visibility, just click on the arrow
@@ -17,6 +17,17 @@ When hitted, the button will scan for the nearest active and visibles tokens bas
 * All clips are configurable through the module options
 
 # Changelog
+
+## v1.5.3
+* v13 portability
+* Added configuration for the maximum amount of tokens showable
+* Added configuration for the maximum amount of fake signals showable
+* Added configuration for the minimum range generation for fake signals
+* Added configuration for the maximum range generation for fake signals
+* Changed the computation for fake signals generation
+  * Before, we were generating random positions in a square around the token with wrong distance calculation
+  * Now, we generate random positions around the token based on angle and distance
+* Fixed distance text not being drawn in some cases due to the computation being wrong or having now wrong inputs
 
 ## v1.5.2
 * remove dependency from Alien RPG System
