@@ -25,11 +25,13 @@ Hooks.on("renderSceneControls", async (app, html, data) => {
 
 		if (!mainControlsMenu?.length) return;
 
-		mainControlsMenu.append(mtButtonHtml);
-		const mtButton = htmlJQuery.find(controlItemId);
+		const existingMtButton = htmlJQuery.find(controlItemId);
 
-		if (!mtButton?.length) return;
+		if (existingMtButton?.length > 0) return;
+
+		mainControlsMenu.append(mtButtonHtml);
 		
+		const mtButton = htmlJQuery.find(controlItemId);
 		mtButton
 			.on("click", event => {
 				const mtButton = htmlJQuery.find(controlItemId);
@@ -54,6 +56,8 @@ Hooks.on("renderSceneControls", async (app, html, data) => {
 
 Hooks.on('init', ()=>
 {
+	CONFIG.statusEffects.push(MotionTrackerDevice.STATUS_MOTIONLESS);
+
 	settings.registerSettings((data)=>
 	{
 		if(game.motion_tracker)
@@ -78,8 +82,6 @@ Hooks.on('init', ()=>
 Hooks.on('ready', ()=>
 {
 	console.log('Motion Tracker Module <ready> hook');
-	
-	CONFIG.statusEffects.push(MotionTrackerDevice.STATUS_MOTIONLESS);
 });
 
 Hooks.on('updatePlayer', () =>

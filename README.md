@@ -18,6 +18,10 @@ When hit, the button will scan for the nearest active and visibles tokens based 
 
 # Changelog
 
+## v1.5.4
+* Fixed duplicate icon issue
+* Fixed status icon not working
+
 ## v1.5.3
 * v13 portability
 * Added configuration for the maximum amount of tokens showable
