@@ -211,9 +211,9 @@ export class MotionTrackerDevice
 	static BACKGROUND_MT_PADDING_SCALE_TOTAL = 0.125;
 
 	static STATUS_MOTIONLESS = {
-		id: 'MotionTracker.motionless',
-		label: 'MotionTracker.motionless',
-		icon: 'modules/motion_tracker/textures/motion_tracker_status_ico.webp'
+		id: 'MotionTracker_motionless',
+		name: 'MotionTracker.motionless',
+		img: 'modules/motion_tracker/textures/motion_tracker_status_ico.webp'
 	};
 
 	static STATUS_MANDATORY = [MotionTrackerDevice.STATUS_MOTIONLESS.id, CONFIG.Combat.defeatedStatusId];
@@ -479,24 +479,12 @@ export class MotionTrackerDevice
 		const pos = this.computeTokenCenter(this.tokenReference);
 
 		let nearestDist = distanceMax;
-		let playerIds = [];
-		for(let i = 0;i<game.users._source.length;++i)
-		{
-			if(game.users._source[i].role<4)
-				playerIds.push(game.users._source[i]._id);
-		}
 		tokens.forEach(token => 
 			{
 				let immobile = undefined;
 				let actor = token.actor;
-				let bPlayerControlled = false;
-				if(actor!==null)
-				{
-					for(let i = 0;i < playerIds.length;++i)
-					{
-						bPlayerControlled = bPlayerControlled || actor.permission[playerIds[i]]>2;
-					}
-				}
+				let bPlayerControlled = actor?.hasPlayerOwner;
+				
 				// v11 introduces proper statuses for actors, immobileStatuses comes from player configuration
 				if(actor!==null && actor!== undefined && immobile===undefined)
 				{
@@ -508,6 +496,11 @@ export class MotionTrackerDevice
 				else if(this.enableInverseStatus)
 				{
 					immobile = true;
+				}
+
+				if(immobile === undefined)
+				{
+					immobile = false;
 				}
 
 				if(

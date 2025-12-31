@@ -25,11 +25,13 @@ Hooks.on("renderSceneControls", async (app, html, data) => {
 
 		if (!mainControlsMenu?.length) return;
 
-		mainControlsMenu.append(mtButtonHtml);
-		const mtButton = htmlJQuery.find(controlItemId);
+		const existingMtButton = htmlJQuery.find(controlItemId);
 
-		if (!mtButton?.length) return;
+		if (existingMtButton?.length > 0) return;
+
+		mainControlsMenu.append(mtButtonHtml);
 		
+		const mtButton = htmlJQuery.find(controlItemId);
 		mtButton
 			.on("click", event => {
 				const mtButton = htmlJQuery.find(controlItemId);
@@ -54,6 +56,8 @@ Hooks.on("renderSceneControls", async (app, html, data) => {
 
 Hooks.on('init', ()=>
 {
+	CONFIG.statusEffects.push(MotionTrackerDevice.STATUS_MOTIONLESS);
+
 	settings.registerSettings((data)=>
 	{
 		if(game.motion_tracker)
@@ -78,8 +82,6 @@ Hooks.on('init', ()=>
 Hooks.on('ready', ()=>
 {
 	console.log('Motion Tracker Module <ready> hook');
-	
-	CONFIG.statusEffects.push(MotionTrackerDevice.STATUS_MOTIONLESS);
 });
 
 Hooks.on('updatePlayer', () =>
@@ -169,6 +171,7 @@ Hooks.on('controlToken', (_token) =>
 	 */
 	constructor()
 	{
+		this.currentSelectedTokenId = null;
 		this.window = null;
 		this.openCloseListeners = [];
 		this.useFakeSignals = MotionTracker.CONFIG.general.useFakeSignals;
@@ -186,7 +189,10 @@ Hooks.on('controlToken', (_token) =>
 	 */
 	_buildWindow()
 	{
-		this.window = new MotionTrackerWindow(this);
+		if(this.window === null)
+		{
+			this.window = new MotionTrackerWindow(this);
+		}
 		this.currentCanvasPosition = MotionTracker.CONFIG.canvasZIndex;
 		this.currentUseHighDPI = MotionTracker.CONFIG.useHighDPI;
 	}
@@ -316,14 +322,15 @@ Hooks.on('controlToken', (_token) =>
 
 	_onControlToken(_token)
 	{
-		if(this.window && hasAdminRights() && (this.window.tokenId === null || this.window.enableFastTokenChange))
+		this.currentSelectedTokenId = _token.document.actorId;
+		if(this.window && this.window.isOpen() && hasAdminRights() && (this.window.tokenId === null || this.window.enableFastTokenChange))
 		{
 			let user = game.user;
 			let ownerId = game.user.id;
 			let tokenId = null;
 			let viewedScene = game.user.viewedScene;
 			
-			if(tokenId === null && _token!==null)
+			if(_token!==null)
 				tokenId = _token.document.actorId;
 			this.window.setData(user, ownerId, tokenId, viewedScene);
 			this.window.sendCommand(/*target id*/tokenId, 'changeTarget');
@@ -340,6 +347,10 @@ Hooks.on('controlToken', (_token) =>
 	 */
 	async open(user = game.user, ownerId = game.user.id, tokenId = this.window.tokenId, viewedScene = game.user.viewedScene, _data = undefined)
 	{
+		if (tokenId === null)
+		{
+			tokenId = this.currentSelectedTokenId;
+		}
 		this.window.setData(user, ownerId, tokenId, viewedScene);
 		await this.window.render(_data, true);
 		this.openCloseListeners.forEach(function(_callback)
@@ -771,7 +782,13 @@ class MotionTrackerWindow extends Application
 			this.sendCommand(game.user.id, 'close', 'notify');
 		}
 		this.closeDevice();
+		this.setData(null, null, null, null);
 		return super.close(options);
+	}
+
+	isOpen()
+	{
+		return this.device !== null;
 	}
 
 	setData(user, ownerId, tokenId, sceneId)
