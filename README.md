@@ -21,6 +21,7 @@ When hit, the button will scan for the nearest active and visibles tokens based 
 ## v1.5.4
 * Fixed duplicate icon issue
 * Fixed status icon not working
+* Fixed token selection
 
 ## v1.5.3
 * v13 portability
