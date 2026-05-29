@@ -40,8 +40,8 @@
       "url": "https://github.com/pplans/"
     }
   ],
-  "manifest": "https://raw.githubusercontent.com/pplans/foundry-vtt-module-motion-tracker/main/module.json",
-  "download": "https://github.com/pplans/foundry-vtt-module-motion-tracker/archive/refs/heads/main.zip",
+  "manifest": "https://raw.githubusercontent.com/bneumann/foundry-vtt-module-motion-tracker/refs/heads/fix/updateTo14/module.json",
+  "download": "https://github.com/bneumann/foundry-vtt-module-motion-tracker/archive/refs/heads/fix/updateTo14.zip",
   "license": "readme.md",
   "id": "motion_tracker",
   "relationships": {
