@@ -142,18 +142,18 @@ Hooks.on('controlToken', (_token) =>
     
 	static ALL_DEFAULT_OPTIONS(user = game.user)
 	{
-		return mergeObject(MotionTracker.DEFAULT_OPTIONS, MotionTracker.DEFAULT_APPEARANCE(user));
+		return foundry.utils.mergeObject(MotionTracker.DEFAULT_OPTIONS, MotionTracker.DEFAULT_APPEARANCE(user));
 	}
     
 	static get CONFIG()
 	{
-		return mergeObject(MotionTracker.DEFAULT_OPTIONS, game.settings.get(settings.REGISTER_CODE, 'settings'));
+		return foundry.utils.mergeObject(MotionTracker.DEFAULT_OPTIONS, game.settings.get(settings.REGISTER_CODE, 'settings'));
 	}
     
 	static APPEARANCE(user = game.user)
 	{
 		let userAppearance = user.getFlag(settings.REGISTER_CODE, 'appearance');
-		return mergeObject(MotionTracker.DEFAULT_APPEARANCE(user), userAppearance);
+		return foundry.utils.mergeObject(MotionTracker.DEFAULT_APPEARANCE(user), userAppearance);
 	}
     
 	static ALL_CUSTOMIZATION(user = game.user)
@@ -163,7 +163,7 @@ Hooks.on('controlToken', (_token) =>
     
 	static ALL_CONFIG(user = game.user)
 	{
-		return mergeObject(MotionTracker.CONFIG, MotionTracker.APPEARANCE(user));
+		return foundry.utils.mergeObject(MotionTracker.CONFIG, MotionTracker.APPEARANCE(user));
 	}
     
 	/**
@@ -419,7 +419,7 @@ class MotionTrackerWindow extends Application
 
 	static get defaultOptions()
 	{
-		return mergeObject(super.defaultOptions,
+		return foundry.utils.mergeObject(super.defaultOptions,
 		{
 			title: game.i18n.localize('MOTIONTRACKER.MotionTrackerDialogTitle'),
 			id: "motion-tracker-window",
@@ -434,7 +434,7 @@ class MotionTrackerWindow extends Application
 	 ******************************/
 	getData(options)
 	{
-		let data = mergeObject(MotionTracker.CONFIG, game.settings.get(settings.REGISTER_CODE, 'settings'), { insertKeys: false, insertValues: false });
+		let data = foundry.utils.mergeObject(MotionTracker.CONFIG, game.settings.get(settings.REGISTER_CODE, 'settings'), { insertKeys: false, insertValues: false });
 		data.ui = {
 				isAdmin: game.user.hasRole(CONST.USER_ROLES.ASSISTANT)
 				, fakeSignalsIcon: MotionTracker.CONFIG.general.useFakeSignals?'motion-tracker-options-use-fake-signals-ico':'motion-tracker-options-not-use-fake-signals-ico'

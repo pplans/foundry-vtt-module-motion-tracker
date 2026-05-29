@@ -163,7 +163,7 @@ function gmOnly_Settings(callbackResize)
 class MotionTrackerConfig extends FormApplication
 {
 	static get defaultOptions() {
-		return mergeObject(super.defaultOptions,
+		return foundry.utils.mergeObject(super.defaultOptions,
 		{
 			title: game.i18n.localize("MOTIONTRACKER.configTitle"),
 			id: "motion-tracker-config",
@@ -177,7 +177,7 @@ class MotionTrackerConfig extends FormApplication
 
 	getData(options)
 	{
-		let data = mergeObject(MotionTracker.CONFIG, game.settings.get(REGISTER_CODE, 'settings'), { insertKeys: false, insertValues: false });
+		let data = foundry.utils.mergeObject(MotionTracker.CONFIG, game.settings.get(REGISTER_CODE, 'settings'), { insertKeys: false, insertValues: false });
 		data.general.useFakeSignalsChecked = data.general.useFakeSignals ? 'checked':'';
 		data.general.applyScreenGlitchChecked = data.general.applyScreenGlitch ? 'checked':'';
 		data.general.enableFastTokenChangeChecked = data.general.enableFastTokenChange?'checked':'';
@@ -289,7 +289,7 @@ class MotionTrackerConfig extends FormApplication
 			}
 		};
 
-		let settings = mergeObject(MotionTracker.CONFIG, data, { insertKeys: false, insertValues: false });
+		let settings = foundry.utils.mergeObject(MotionTracker.CONFIG, data, { insertKeys: false, insertValues: false });
 
 		if(game.motion_tracker)
 		{
