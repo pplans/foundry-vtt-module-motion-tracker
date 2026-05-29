@@ -15,7 +15,7 @@ Hooks.on("renderSceneControls", async (app, html, data) => {
 	if(hasAdminRights())
 	{
 		const controlButtonIcon = `${settings.PATH}/textures/motion_tracker_ico.webp`;
-		const mtButtonHtml = await renderTemplate(`${settings.TEMPLATE_PATH}/menu_button.html`, {controlButtonIcon});
+		const mtButtonHtml = await foundry.applications.handlebars.renderTemplate(`${settings.TEMPLATE_PATH}/menu_button.html`, {controlButtonIcon});
 		
 		const controlId = "#scene-controls-layers";
 		const controlItemId = controlId + " button[data-control='motion-tracker']";
@@ -269,7 +269,7 @@ Hooks.on('controlToken', (_token) =>
 		{
 			if(!game.user.getFlag(settings.REGISTER_CODE,'appearance'))
 			{
-				renderTemplate("modules/motion_tracker/templates/welcomeMessage.html", {}).then((html)=>
+				foundry.applications.handlebars.renderTemplate("modules/motion_tracker/templates/welcomeMessage.html", {}).then((html)=>
 				{
 					let options = {
 						whisper:[game.user.id],
@@ -282,7 +282,7 @@ Hooks.on('controlToken', (_token) =>
 		}
 		if(game.user != null && !game.user.getFlag(settings.REGISTER_CODE, settings.VERSION))
 		{
-			renderTemplate("modules/motion_tracker/templates/updateMessage.html", {}).then((html)=>
+			foundry.applications.handlebars.renderTemplate("modules/motion_tracker/templates/updateMessage.html", {}).then((html)=>
 			{
 				let options = {
 					whisper:[game.user.id],
@@ -401,7 +401,7 @@ Hooks.on('controlToken', (_token) =>
 /**
  * Application window for the MotionTracker
  */
-class MotionTrackerWindow extends Application
+class MotionTrackerWindow extends foundry.appv1.api.Application
 {
 	constructor(_motionTracker, options={})
 	{

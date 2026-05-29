@@ -160,7 +160,7 @@ function gmOnly_Settings(callbackResize)
 /**
  * Form application to configure settings of the Motion Tracker.
  */
-class MotionTrackerConfig extends FormApplication
+class MotionTrackerConfig extends foundry.appv1.api.FormApplication
 {
 	static get defaultOptions() {
 		return foundry.utils.mergeObject(super.defaultOptions,
@@ -226,7 +226,7 @@ class MotionTrackerConfig extends FormApplication
 		{
 			event.preventDefault();
 			let target = button.getAttribute('data-target');
-			let fp = FilePicker.fromButton(button);
+			let fp = foundry.applications.apps.FilePicker.fromButton(button);
 			this.filepickers.push({
 				target: target,
 				app: fp
@@ -238,7 +238,7 @@ class MotionTrackerConfig extends FormApplication
 	_onReset(event)
 	{
 		event.preventDefault();
-		Dialog.confirm({
+		foundry.appv1.api.Dialog.confirm({
 			title: game.i18n.localize('MOTIONTRACKER.SettingsConfirmTitle'),
 			content: `<p>${game.i18n.localize('MOTIONTRACKER.SettingsConfirmContent')}</p>`,
 			yes: () => 
