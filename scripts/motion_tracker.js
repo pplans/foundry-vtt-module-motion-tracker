@@ -15,7 +15,7 @@ Hooks.on("renderSceneControls", async (app, html, data) => {
 	if(hasAdminRights())
 	{
 		const controlButtonIcon = `${settings.PATH}/textures/motion_tracker_ico.webp`;
-		const mtButtonHtml = await renderTemplate(`${settings.TEMPLATE_PATH}/menu_button.html`, {controlButtonIcon});
+		const mtButtonHtml = await foundry.applications.handlebars.renderTemplate(`${settings.TEMPLATE_PATH}/menu_button.html`, {controlButtonIcon});
 		
 		const controlId = "#scene-controls-layers";
 		const controlItemId = controlId + " button[data-control='motion-tracker']";
@@ -142,18 +142,18 @@ Hooks.on('controlToken', (_token) =>
     
 	static ALL_DEFAULT_OPTIONS(user = game.user)
 	{
-		return mergeObject(MotionTracker.DEFAULT_OPTIONS, MotionTracker.DEFAULT_APPEARANCE(user));
+		return foundry.utils.mergeObject(MotionTracker.DEFAULT_OPTIONS, MotionTracker.DEFAULT_APPEARANCE(user));
 	}
     
 	static get CONFIG()
 	{
-		return mergeObject(MotionTracker.DEFAULT_OPTIONS, game.settings.get(settings.REGISTER_CODE, 'settings'));
+		return foundry.utils.mergeObject(MotionTracker.DEFAULT_OPTIONS, game.settings.get(settings.REGISTER_CODE, 'settings'));
 	}
     
 	static APPEARANCE(user = game.user)
 	{
 		let userAppearance = user.getFlag(settings.REGISTER_CODE, 'appearance');
-		return mergeObject(MotionTracker.DEFAULT_APPEARANCE(user), userAppearance);
+		return foundry.utils.mergeObject(MotionTracker.DEFAULT_APPEARANCE(user), userAppearance);
 	}
     
 	static ALL_CUSTOMIZATION(user = game.user)
@@ -163,7 +163,7 @@ Hooks.on('controlToken', (_token) =>
     
 	static ALL_CONFIG(user = game.user)
 	{
-		return mergeObject(MotionTracker.CONFIG, MotionTracker.APPEARANCE(user));
+		return foundry.utils.mergeObject(MotionTracker.CONFIG, MotionTracker.APPEARANCE(user));
 	}
     
 	/**
@@ -269,7 +269,7 @@ Hooks.on('controlToken', (_token) =>
 		{
 			if(!game.user.getFlag(settings.REGISTER_CODE,'appearance'))
 			{
-				renderTemplate("modules/motion_tracker/templates/welcomeMessage.html", {}).then((html)=>
+				foundry.applications.handlebars.renderTemplate("modules/motion_tracker/templates/welcomeMessage.html", {}).then((html)=>
 				{
 					let options = {
 						whisper:[game.user.id],
@@ -282,7 +282,7 @@ Hooks.on('controlToken', (_token) =>
 		}
 		if(game.user != null && !game.user.getFlag(settings.REGISTER_CODE, settings.VERSION))
 		{
-			renderTemplate("modules/motion_tracker/templates/updateMessage.html", {}).then((html)=>
+			foundry.applications.handlebars.renderTemplate("modules/motion_tracker/templates/updateMessage.html", {}).then((html)=>
 			{
 				let options = {
 					whisper:[game.user.id],
@@ -401,7 +401,7 @@ Hooks.on('controlToken', (_token) =>
 /**
  * Application window for the MotionTracker
  */
-class MotionTrackerWindow extends Application
+class MotionTrackerWindow extends foundry.appv1.api.Application
 {
 	constructor(_motionTracker, options={})
 	{
@@ -419,7 +419,7 @@ class MotionTrackerWindow extends Application
 
 	static get defaultOptions()
 	{
-		return mergeObject(super.defaultOptions,
+		return foundry.utils.mergeObject(super.defaultOptions,
 		{
 			title: game.i18n.localize('MOTIONTRACKER.MotionTrackerDialogTitle'),
 			id: "motion-tracker-window",
@@ -434,7 +434,7 @@ class MotionTrackerWindow extends Application
 	 ******************************/
 	getData(options)
 	{
-		let data = mergeObject(MotionTracker.CONFIG, game.settings.get(settings.REGISTER_CODE, 'settings'), { insertKeys: false, insertValues: false });
+		let data = foundry.utils.mergeObject(MotionTracker.CONFIG, game.settings.get(settings.REGISTER_CODE, 'settings'), { insertKeys: false, insertValues: false });
 		data.ui = {
 				isAdmin: game.user.hasRole(CONST.USER_ROLES.ASSISTANT)
 				, fakeSignalsIcon: MotionTracker.CONFIG.general.useFakeSignals?'motion-tracker-options-use-fake-signals-ico':'motion-tracker-options-not-use-fake-signals-ico'
